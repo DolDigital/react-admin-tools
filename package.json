@@ -20,6 +20,8 @@
         "watch": "rimraf ./lib && rimraf ./esm && tsc --watch"
     },
     "dependencies": {
+        "is-mongo-objectid": "^0.0.1",
+        "moment": "^2.24.0",
         "query-string": "~5.1.1"
     },
     "peerDependencies": {

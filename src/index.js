@@ -11,6 +11,8 @@ import {
   DELETE,
   DELETE_MANY,
 } from 'react-admin';
+import moment from 'moment';
+import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
 
 /**
@@ -49,6 +51,25 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     }
   }
 
+  const computeFilters = filters => {
+    const { q, ...filter } = filters;
+    const flattened = fetchUtils.flattenObject(filter);
+    const returner = {};
+    Object.keys(flattened).forEach(f => {
+      if (moment(flattened[f]).isValid() || !isNaN(flattened[f])) {
+        returner[f] = flattened[f];
+      } else if(isValidObjectID(flattened[f])) {
+        returner[f] = flattened[f];
+      } else {
+        returner[`${f}_contains`] = flattened[f];
+      }
+    });
+
+    if (q) returner['_q'] = q;
+
+    return returner;
+  }
+
   /**
    * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
    * @param {String} resource Name of the resource to fetch, e.g. 'posts'
@@ -62,14 +83,13 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
       case GET_LIST: {
         const { page, perPage } = params.pagination;
         const { field, order } = params.sort;
-        const { q, ...filter } = params.filter;
+        const filters = computeFilters(params.filter);
         const query = {
-          ...fetchUtils.flattenObject(filter),
+          ...filters,
           _sort: field + ':' + order,
           _start: (page - 1) * perPage,
           _limit: perPage,
         };
-        if (q) query['_q'] = q;
         url = `${apiUrl}/${resource}?${stringify(query)}`;
         break;
       }
@@ -130,9 +150,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     switch (type) {
       case GET_LIST:
       case GET_MANY_REFERENCE:
-        const { q, ...filter } = params.filter;
-        if (q) filter['_q'] = q;
-        return httpClient(`${apiUrl}/${resource}/count?${stringify(fetchUtils.flattenObject(filter))}`, {
+        const filters = computeFilters(params.filter);
+        return httpClient(`${apiUrl}/${resource}/count?${stringify(filters)}`, {
           method: 'GET'
         }).then(response => {
           return {
@@ -157,12 +176,13 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
     // json-server doesn't handle filters on UPDATE route, so we fallback to calling UPDATE n times instead
     if (type === UPDATE_MANY) {
       return Promise.all(
-        params.ids.map(id =>
-          httpClient(`${apiUrl}/${resource}/${id}`, {
+        params.ids.map(async id => { 
+          await uploadFiles(params);
+          return httpClient(`${apiUrl}/${resource}/${id}`, {
             method: 'PUT',
             body: JSON.stringify(params.data),
           })
-        )
+        })
       ).then(responses => ({
         data: responses.map(response => response.json),
       }));
