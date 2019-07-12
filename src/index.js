@@ -11,6 +11,7 @@ import {
   DELETE,
   DELETE_MANY,
 } from 'react-admin';
+import buildUploader from './upload';
 
 /**
  * Maps react-admin queries to a json-server powered REST API
@@ -25,13 +26,36 @@ import {
  * DELETE       => DELETE http://my.api.url/posts/123
  */
 export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
+  const uploader = buildUploader(apiUrl);
+
+  const uploadFiles = async params => {
+    let upload = null;
+    if(params.data) {
+      let param, paramName;
+      let keys = [...Object.keys(params.data)];
+      for(let index = 0; index < keys.length; index++) {
+        upload = null;
+        paramName = keys[index];
+        param = params.data[paramName];
+        if (param instanceof File) {
+          upload = await uploader(param);
+        } else if (typeof param.rawFile !== "undefined" && param.rawFile instanceof File) {
+          upload = await uploader(param.rawFile);
+        }
+        if(upload) {
+          params.data[paramName] = Array.isArray(upload) ? upload[0].id : upload.id;
+        }
+      }
+    }
+  }
+
   /**
    * @param {String} type One of the constants appearing at the top if this file, e.g. 'UPDATE'
    * @param {String} resource Name of the resource to fetch, e.g. 'posts'
    * @param {Object} params The data request params, depending on the type
    * @returns {Object} { url, options } The HTTP request parameters
    */
-  const convertDataRequestToHTTP = (type, resource, params) => {
+  const convertDataRequestToHTTP = async (type, resource, params) => {
     let url = '';
     const options = {};
     switch (type) {
@@ -68,11 +92,13 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
       case UPDATE:
         url = `${apiUrl}/${resource}/${params.id}`;
         options.method = 'PUT';
+        await uploadFiles(params);
         options.body = JSON.stringify(params.data);
         break;
       case CREATE:
         url = `${apiUrl}/${resource}`;
         options.method = 'POST';
+        await uploadFiles(params);
         options.body = JSON.stringify(params.data);
         break;
       case DELETE:
@@ -127,7 +153,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
    * @param {Object} payload Request parameters. Depends on the request type
    * @returns {Promise} the Promise for a data response
    */
-  return (type, resource, params) => {
+  return async (type, resource, params) => {
     // json-server doesn't handle filters on UPDATE route, so we fallback to calling UPDATE n times instead
     if (type === UPDATE_MANY) {
       return Promise.all(
@@ -153,7 +179,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
         data: responses.map(response => response.json),
       }));
     }
-    const { url, options } = convertDataRequestToHTTP(
+    const { url, options } = await convertDataRequestToHTTP(
       type,
       resource,
       params
