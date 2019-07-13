@@ -92,6 +92,7 @@ export default (function (apiUrl, httpClient) {
                     upload = null;
                     paramName = keys[index];
                     param = params.data[paramName];
+                    if (!param) return [3 /*break*/, 6];
                     if (!(param instanceof File)) return [3 /*break*/, 3];
                     return [4 /*yield*/, uploader(param)];
                 case 2:

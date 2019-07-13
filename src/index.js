@@ -39,13 +39,15 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
         upload = null;
         paramName = keys[index];
         param = params.data[paramName];
-        if (param instanceof File) {
-          upload = await uploader(param);
-        } else if (typeof param.rawFile !== "undefined" && param.rawFile instanceof File) {
-          upload = await uploader(param.rawFile);
-        }
-        if(upload) {
-          params.data[paramName] = Array.isArray(upload) ? upload[0].id : upload.id;
+        if(param) {
+          if (param instanceof File) {
+            upload = await uploader(param);
+          } else if (typeof param.rawFile !== "undefined" && param.rawFile instanceof File) {
+            upload = await uploader(param.rawFile);
+          }
+          if (upload) {
+            params.data[paramName] = Array.isArray(upload) ? upload[0].id : upload.id;
+          }
         }
       }
     }
