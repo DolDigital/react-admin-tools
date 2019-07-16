@@ -14,6 +14,11 @@ import {
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
+import buildAuthProvider from './loginProvider';
+
+export {
+  buildAuthProvider
+}
 
 /**
  * Maps react-admin queries to a json-server powered REST API

@@ -61,6 +61,8 @@ import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UP
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
+import buildAuthProvider from './loginProvider';
+export { buildAuthProvider };
 /**
  * Maps react-admin queries to a json-server powered REST API
  *
@@ -350,7 +352,6 @@ export default (function (apiUrl, httpClient) {
                         _a = params.filter, filter = _a === void 0 ? {} : _a;
                         filter['basepath'] = 0;
                         params.filter = filter;
-                        console.log(params);
                     }
                     return [4 /*yield*/, convertDataRequestToHTTP(type, resource, params)];
                 case 1:
