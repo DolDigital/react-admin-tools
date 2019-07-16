@@ -237,6 +237,12 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
         }
       }
     }
+    if(resource === 'upload/files') {
+      const { filter = {} } = params;
+      filter['basepath'] = 0;
+      params.filter = filter;
+      console.log(params);
+    }
     const { url, options } = await convertDataRequestToHTTP(
       type,
       resource,

@@ -302,10 +302,10 @@ export default (function (apiUrl, httpClient) {
      * @returns {Promise} the Promise for a data response
      */
     return function (type, resource, params) { return __awaiter(_this, void 0, void 0, function () {
-        var upload, _a, url, options;
+        var upload, _a, filter, _b, url, options;
         var _this = this;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
                     // json-server doesn't handle filters on UPDATE route, so we fallback to calling UPDATE n times instead
                     if (type === UPDATE_MANY) {
@@ -344,9 +344,15 @@ export default (function (apiUrl, httpClient) {
                                 }
                             }];
                     }
+                    if (resource === 'upload/files') {
+                        _a = params.filter, filter = _a === void 0 ? {} : _a;
+                        filter['basepath'] = 0;
+                        params.filter = filter;
+                        console.log(params);
+                    }
                     return [4 /*yield*/, convertDataRequestToHTTP(type, resource, params)];
                 case 1:
-                    _a = _b.sent(), url = _a.url, options = _a.options;
+                    _b = _c.sent(), url = _b.url, options = _b.options;
                     return [2 /*return*/, httpClient(url, options).then(function (response) {
                             return convertHTTPResponse(response, type, resource, params);
                         })];
