@@ -32,6 +32,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
 
   const handleUploadForm = async params => {
     let upload = null;
+    if(!params.data.files)
+      return [];
     for(let index=0; index<params.data.files.length; index++) {
       upload = await uploader(params.data.files[index].rawFile || params.data.files[index]);
       if(upload) {
@@ -241,7 +243,6 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
       const { filter = {} } = params;
       filter['basepath'] = 0;
       params.filter = filter;
-      console.log(params);
     }
     const { url, options } = await convertDataRequestToHTTP(
       type,

@@ -82,6 +82,8 @@ export default (function (apiUrl, httpClient) {
             switch (_a.label) {
                 case 0:
                     upload = null;
+                    if (!params.data.files)
+                        return [2 /*return*/, []];
                     index = 0;
                     _a.label = 1;
                 case 1:
