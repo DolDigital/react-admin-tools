@@ -76,43 +76,95 @@ import buildUploader from './upload';
 export default (function (apiUrl, httpClient) {
     if (httpClient === void 0) { httpClient = fetchUtils.fetchJson; }
     var uploader = buildUploader(apiUrl);
-    var uploadFiles = function (params) { return __awaiter(_this, void 0, void 0, function () {
-        var upload, param, paramName, keys, index;
+    var handleUploadForm = function (params) { return __awaiter(_this, void 0, void 0, function () {
+        var upload, index;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     upload = null;
-                    if (!params.data) return [3 /*break*/, 7];
-                    param = void 0, paramName = void 0;
+                    index = 0;
+                    _a.label = 1;
+                case 1:
+                    if (!(index < params.data.files.length)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, uploader(params.data.files[index].rawFile || params.data.files[index])];
+                case 2:
+                    upload = _a.sent();
+                    if (upload) {
+                        params.data.files[index] = Array.isArray(upload) ? upload[0].id : upload.id;
+                    }
+                    upload = null;
+                    _a.label = 3;
+                case 3:
+                    index++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/, params.data.files];
+            }
+        });
+    }); };
+    var uploadFiles = function (params) { return __awaiter(_this, void 0, void 0, function () {
+        var upload, param, paramName, child, keys, index, i;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    upload = null;
+                    if (!params.data) return [3 /*break*/, 14];
+                    param = void 0, paramName = void 0, child = void 0;
                     keys = Object.keys(params.data).slice();
                     index = 0;
                     _a.label = 1;
                 case 1:
-                    if (!(index < keys.length)) return [3 /*break*/, 7];
+                    if (!(index < keys.length)) return [3 /*break*/, 14];
                     upload = null;
                     paramName = keys[index];
                     param = params.data[paramName];
-                    if (!param) return [3 /*break*/, 6];
+                    if (!param) return [3 /*break*/, 13];
                     if (!(param instanceof File)) return [3 /*break*/, 3];
                     return [4 /*yield*/, uploader(param)];
                 case 2:
                     upload = _a.sent();
-                    return [3 /*break*/, 5];
+                    return [3 /*break*/, 12];
                 case 3:
                     if (!(typeof param.rawFile !== "undefined" && param.rawFile instanceof File)) return [3 /*break*/, 5];
                     return [4 /*yield*/, uploader(param.rawFile)];
                 case 4:
                     upload = _a.sent();
-                    _a.label = 5;
+                    return [3 /*break*/, 12];
                 case 5:
+                    if (!Array.isArray(param)) return [3 /*break*/, 12];
+                    i = 0;
+                    _a.label = 6;
+                case 6:
+                    if (!(i < param.length)) return [3 /*break*/, 12];
+                    child = param[i];
+                    if (!(child instanceof File)) return [3 /*break*/, 8];
+                    return [4 /*yield*/, uploader(child)];
+                case 7:
+                    upload = _a.sent();
+                    return [3 /*break*/, 10];
+                case 8:
+                    if (!(typeof child.rawFile !== "undefined" && child.rawFile instanceof File)) return [3 /*break*/, 10];
+                    return [4 /*yield*/, uploader(child.rawFile)];
+                case 9:
+                    upload = _a.sent();
+                    _a.label = 10;
+                case 10:
+                    if (upload) {
+                        params.data[paramName][i] = Array.isArray(upload) ? upload[0].id : upload.id;
+                    }
+                    upload = null;
+                    _a.label = 11;
+                case 11:
+                    i++;
+                    return [3 /*break*/, 6];
+                case 12:
                     if (upload) {
                         params.data[paramName] = Array.isArray(upload) ? upload[0].id : upload.id;
                     }
-                    _a.label = 6;
-                case 6:
+                    _a.label = 13;
+                case 13:
                     index++;
                     return [3 /*break*/, 1];
-                case 7: return [2 /*return*/];
+                case 14: return [2 /*return*/];
             }
         });
     }); };
@@ -234,7 +286,7 @@ export default (function (apiUrl, httpClient) {
                 }).then(function (response) {
                     return {
                         data: json,
-                        total: response.json
+                        total: response.json.count || response.json //Some endpoints (like the upload plugin one) return total as a property "count"
                     };
                 });
             case CREATE:
@@ -250,18 +302,26 @@ export default (function (apiUrl, httpClient) {
      * @returns {Promise} the Promise for a data response
      */
     return function (type, resource, params) { return __awaiter(_this, void 0, void 0, function () {
-        var _a, url, options;
+        var upload, _a, url, options;
+        var _this = this;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     // json-server doesn't handle filters on UPDATE route, so we fallback to calling UPDATE n times instead
                     if (type === UPDATE_MANY) {
-                        return [2 /*return*/, Promise.all(params.ids.map(function (id) {
-                                return httpClient(apiUrl + "/" + resource + "/" + id, {
-                                    method: 'PUT',
-                                    body: JSON.stringify(params.data),
+                        return [2 /*return*/, Promise.all(params.ids.map(function (id) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, uploadFiles(params)];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/, httpClient(apiUrl + "/" + resource + "/" + id, {
+                                                    method: 'PUT',
+                                                    body: JSON.stringify(params.data),
+                                                })];
+                                    }
                                 });
-                            })).then(function (responses) { return ({
+                            }); })).then(function (responses) { return ({
                                 data: responses.map(function (response) { return response.json; }),
                             }); })];
                     }
@@ -274,6 +334,15 @@ export default (function (apiUrl, httpClient) {
                             })).then(function (responses) { return ({
                                 data: responses.map(function (response) { return response.json; }),
                             }); })];
+                    }
+                    if (resource === 'upload' && type === CREATE) {
+                        upload = handleUploadForm(params);
+                        return [2 /*return*/, {
+                                data: {
+                                    files: upload,
+                                    id: null
+                                }
+                            }];
                     }
                     return [4 /*yield*/, convertDataRequestToHTTP(type, resource, params)];
                 case 1:

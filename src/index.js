@@ -30,10 +30,23 @@ import buildUploader from './upload';
 export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
   const uploader = buildUploader(apiUrl);
 
+  const handleUploadForm = async params => {
+    let upload = null;
+    for(let index=0; index<params.data.files.length; index++) {
+      upload = await uploader(params.data.files[index].rawFile || params.data.files[index]);
+      if(upload) {
+        params.data.files[index] = Array.isArray(upload) ? upload[0].id : upload.id;
+      }
+      upload = null;
+    }
+
+    return params.data.files;
+  }
+
   const uploadFiles = async params => {
     let upload = null;
     if(params.data) {
-      let param, paramName;
+      let param, paramName, child;
       let keys = [...Object.keys(params.data)];
       for(let index = 0; index < keys.length; index++) {
         upload = null;
@@ -44,6 +57,20 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
             upload = await uploader(param);
           } else if (typeof param.rawFile !== "undefined" && param.rawFile instanceof File) {
             upload = await uploader(param.rawFile);
+          } else if(Array.isArray(param)) {
+            for(let i=0; i<param.length; i++) {
+              child = param[i];
+              if(child instanceof File) {
+                upload = await uploader(child);
+              } else if (typeof child.rawFile !== "undefined" && child.rawFile instanceof File) {
+                upload = await uploader(child.rawFile);
+              }
+
+              if(upload) {
+                params.data[paramName][i] = Array.isArray(upload) ? upload[0].id : upload.id;
+              }
+              upload = null;
+            }
           }
           if (upload) {
             params.data[paramName] = Array.isArray(upload) ? upload[0].id : upload.id;
@@ -158,7 +185,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
         }).then(response => {
           return {
             data: json,
-            total: response.json
+            total: response.json.count || response.json //Some endpoints (like the upload plugin one) return total as a property "count"
           };
         });
       case CREATE:
@@ -200,6 +227,15 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
       ).then(responses => ({
         data: responses.map(response => response.json),
       }));
+    }
+    if(resource === 'upload' && type === CREATE) {
+      const upload = handleUploadForm(params);
+      return {
+        data: {
+          files: upload,
+          id: null
+        }
+      }
     }
     const { url, options } = await convertDataRequestToHTTP(
       type,
