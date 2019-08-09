@@ -10,14 +10,55 @@ import {
   UPDATE_MANY,
   DELETE,
   DELETE_MANY,
+  AUTH_LOGIN,
+  AUTH_LOGOUT,
+  AUTH_ERROR,
+  AUTH_CHECK
 } from 'react-admin';
+
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
-import buildAuthProvider from './loginProvider';
 
-export {
-  buildAuthProvider
+export const buildAuthProvider = (apiUrl, httpClient = fetchUtils.fetchJson) => {
+  return (type, params) => {
+    if (type === AUTH_LOGIN) {
+      const { username, password } = params;
+      const request = new Request(`${apiUrl}/auth/local`, {
+        method: 'POST',
+        body: JSON.stringify({
+          identifier: username,
+          password
+        }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+      })
+      return fetch(request)
+        .then(response => {
+          if (response.status < 200 || response.status >= 300) {
+            throw new Error(response.statusText);
+          }
+          return response.json();
+        })
+        .then(({jwt}) => {
+          localStorage.setItem('strapi_token', jwt);
+        });
+    } else if(type === AUTH_LOGOUT || type === AUTH_ERROR) {
+      localStorage.removeItem('strapi_token');
+    } else if (type === AUTH_CHECK) {
+      return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject();
+    }
+    return Promise.resolve();
+  }
+}
+
+const getAuthHeaders = () => {
+  const authHeaders = {};
+  const strapiToken = localStorage.getItem('strapi_token');
+  if(strapiToken) {
+    authHeaders['Authorization'] = `Bearer ${strapiToken}`;
+  }
+
+  return authHeaders;
 }
 
 /**
@@ -32,8 +73,16 @@ export {
  * CREATE       => POST http://my.api.url/posts/123
  * DELETE       => DELETE http://my.api.url/posts/123
  */
-export default (apiUrl, httpClient = fetchUtils.fetchJson) => {
+export default (apiUrl, httpClient = false) => {
   const uploader = buildUploader(apiUrl);
+  if(httpClient === false) {
+    httpClient = (url, options = {}) => {
+      if(!options.headers) {
+        options.headers = new Headers(Object.assign({}, getAuthHeaders(), { Accept: 'application/json' }));
+      }
+      return fetchUtils.fetchJson(url, options);
+    }
+  }
 
   const handleUploadForm = async params => {
     let upload = null;

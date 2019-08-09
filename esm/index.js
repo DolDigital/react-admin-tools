@@ -57,12 +57,52 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 var _this = this;
 import { stringify } from 'query-string';
-import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UPDATE, UPDATE_MANY, DELETE, DELETE_MANY, } from 'react-admin';
+import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UPDATE, UPDATE_MANY, DELETE, DELETE_MANY, AUTH_LOGIN, AUTH_LOGOUT, AUTH_ERROR, AUTH_CHECK } from 'react-admin';
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
-import buildAuthProvider from './loginProvider';
-export { buildAuthProvider };
+export var buildAuthProvider = function (apiUrl, httpClient) {
+    if (httpClient === void 0) { httpClient = fetchUtils.fetchJson; }
+    return function (type, params) {
+        if (type === AUTH_LOGIN) {
+            var username = params.username, password = params.password;
+            var request = new Request(apiUrl + "/auth/local", {
+                method: 'POST',
+                body: JSON.stringify({
+                    identifier: username,
+                    password: password
+                }),
+                headers: new Headers({ 'Content-Type': 'application/json' }),
+            });
+            return fetch(request)
+                .then(function (response) {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+                .then(function (_a) {
+                var jwt = _a.jwt;
+                localStorage.setItem('strapi_token', jwt);
+            });
+        }
+        else if (type === AUTH_LOGOUT || type === AUTH_ERROR) {
+            localStorage.removeItem('strapi_token');
+        }
+        else if (type === AUTH_CHECK) {
+            return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject();
+        }
+        return Promise.resolve();
+    };
+};
+var getAuthHeaders = function () {
+    var authHeaders = {};
+    var strapiToken = localStorage.getItem('strapi_token');
+    if (strapiToken) {
+        authHeaders['Authorization'] = "Bearer " + strapiToken;
+    }
+    return authHeaders;
+};
 /**
  * Maps react-admin queries to a json-server powered REST API
  *
@@ -76,8 +116,17 @@ export { buildAuthProvider };
  * DELETE       => DELETE http://my.api.url/posts/123
  */
 export default (function (apiUrl, httpClient) {
-    if (httpClient === void 0) { httpClient = fetchUtils.fetchJson; }
+    if (httpClient === void 0) { httpClient = false; }
     var uploader = buildUploader(apiUrl);
+    if (httpClient === false) {
+        httpClient = function (url, options) {
+            if (options === void 0) { options = {}; }
+            if (!options.headers) {
+                options.headers = new Headers(Object.assign({}, getAuthHeaders(), { Accept: 'application/json' }));
+            }
+            return fetchUtils.fetchJson(url, options);
+        };
+    }
     var handleUploadForm = function (params) { return __awaiter(_this, void 0, void 0, function () {
         var upload, index;
         return __generator(this, function (_a) {
