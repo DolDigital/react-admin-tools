@@ -20,7 +20,7 @@ import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
 
-export const buildAuthProvider = (apiUrl, httpClient = fetchUtils.fetchJson) => {
+export const buildAuthProvider = (apiUrl) => {
   return (type, params) => {
     if (type === AUTH_LOGIN) {
       const { username, password } = params;

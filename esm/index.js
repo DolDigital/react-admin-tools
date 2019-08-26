@@ -61,8 +61,7 @@ import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UP
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
-export var buildAuthProvider = function (apiUrl, httpClient) {
-    if (httpClient === void 0) { httpClient = fetchUtils.fetchJson; }
+export var buildAuthProvider = function (apiUrl) {
     return function (type, params) {
         if (type === AUTH_LOGIN) {
             var username = params.username, password = params.password;
