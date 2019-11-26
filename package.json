@@ -1,5 +1,5 @@
 {
-    "name": "ra-data-strapi",
+    "name": "@doldigital/ra-data-strapi",
     "version": "0.1.0",
     "description": "Strapi data provider for react-admin",
     "main": "lib/index.js",
