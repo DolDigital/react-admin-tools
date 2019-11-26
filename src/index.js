@@ -13,41 +13,88 @@ import {
   AUTH_LOGIN,
   AUTH_LOGOUT,
   AUTH_ERROR,
-  AUTH_CHECK
+  AUTH_CHECK,
+  AUTH_GET_PERMISSIONS
 } from 'react-admin';
 
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
 
+const getLoginAction = apiUrl => (username, password) => {
+  const request = new Request(`${apiUrl}/auth/local`, {
+    method: 'POST',
+    body: JSON.stringify({
+      identifier: username,
+      password
+    }),
+    headers: new Headers({ 'Content-Type': 'application/json' }),
+  })
+  return fetch(request)
+    .then(response => {
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(response.statusText)
+      }
+      return response.json()
+    })
+    .then(({ jwt, user }) => {
+      localStorage.setItem('strapi_token', jwt)
+      localStorage.setItem('strapi_role', user.role.name)
+    });
+}
+
+const getLogoutAction = apiUrl => params => {
+  localStorage.removeItem('strapi_token')
+  localStorage.removeItem('strapi_role')
+  return Promise.resolve()
+}
+
+const getErrorAction = apiUrl => error => {
+  const status = error.status;
+  if (status === 401 || status === 403) {
+    localStorage.removeItem('strapi_token');
+    localStorage.removeItem('strapi_role');
+    return Promise.reject();
+  }
+  return Promise.resolve();
+}
+const getCheckAction = apiUrl => params => {
+  return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject()
+}
+
+const getGetPermissionsAction = apiUrl => params => {
+  const role = localStorage.getItem('strapi_role');
+  role ? Promise.resolve(role) : Promise.reject()
+}
+
+export const buildAuthProvider3 = apiUrl => {
+  return {
+    login: ({ username, password }) => getLoginAction(apiUrl)(username, password),
+    logout: getLogoutAction(apiUrl),
+    checkAuth: getCheckAction(apiUrl),
+    checkError: getErrorAction(apiUrl),
+    getPermissions: getGetPermissionsAction(apiUrl),
+  }
+}
+
 export const buildAuthProvider = (apiUrl) => {
   return (type, params) => {
-    if (type === AUTH_LOGIN) {
-      const { username, password } = params;
-      const request = new Request(`${apiUrl}/auth/local`, {
-        method: 'POST',
-        body: JSON.stringify({
-          identifier: username,
-          password
-        }),
-        headers: new Headers({ 'Content-Type': 'application/json' }),
-      })
-      return fetch(request)
-        .then(response => {
-          if (response.status < 200 || response.status >= 300) {
-            throw new Error(response.statusText);
-          }
-          return response.json();
-        })
-        .then(({jwt}) => {
-          localStorage.setItem('strapi_token', jwt);
-        });
-    } else if(type === AUTH_LOGOUT || type === AUTH_ERROR) {
-      localStorage.removeItem('strapi_token');
-    } else if (type === AUTH_CHECK) {
-      return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject();
+    switch(type) {
+      case AUTH_LOGIN:
+        const { username, password } = params;
+        return getLoginAction(apiUrl)(username, password)
+      case AUTH_LOGOUT:
+        return getLogoutAction(apiUrl)(params)
+      case AUTH_ERROR:
+        console.log(params)
+        const { error } = params
+        return getErrorAction(apiUrl)(error)
+      case AUTH_CHECK:
+        return getCheckAction(apiUrl)()
+      case AUTH_GET_PERMISSIONS:
+        return getGetPermissionsAction(apiUrl)()
     }
-    return Promise.resolve();
+    return Promise.reject();
   }
 }
 

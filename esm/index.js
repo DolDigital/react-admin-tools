@@ -57,41 +57,83 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 var _this = this;
 import { stringify } from 'query-string';
-import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UPDATE, UPDATE_MANY, DELETE, DELETE_MANY, AUTH_LOGIN, AUTH_LOGOUT, AUTH_ERROR, AUTH_CHECK } from 'react-admin';
+import { fetchUtils, GET_LIST, GET_ONE, GET_MANY, GET_MANY_REFERENCE, CREATE, UPDATE, UPDATE_MANY, DELETE, DELETE_MANY, AUTH_LOGIN, AUTH_LOGOUT, AUTH_ERROR, AUTH_CHECK, AUTH_GET_PERMISSIONS } from 'react-admin';
 import moment from 'moment';
 import isValidObjectID from 'is-mongo-objectid';
 import buildUploader from './upload';
+var getLoginAction = function (apiUrl) { return function (username, password) {
+    var request = new Request(apiUrl + "/auth/local", {
+        method: 'POST',
+        body: JSON.stringify({
+            identifier: username,
+            password: password
+        }),
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+    });
+    return fetch(request)
+        .then(function (response) {
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error(response.statusText);
+        }
+        return response.json();
+    })
+        .then(function (_a) {
+        var jwt = _a.jwt, user = _a.user;
+        localStorage.setItem('strapi_token', jwt);
+        localStorage.setItem('strapi_role', user.role.name);
+    });
+}; };
+var getLogoutAction = function (apiUrl) { return function (params) {
+    localStorage.removeItem('strapi_token');
+    localStorage.removeItem('strapi_role');
+    return Promise.resolve();
+}; };
+var getErrorAction = function (apiUrl) { return function (error) {
+    var status = error.status;
+    if (status === 401 || status === 403) {
+        localStorage.removeItem('strapi_token');
+        localStorage.removeItem('strapi_role');
+        return Promise.reject();
+    }
+    return Promise.resolve();
+}; };
+var getCheckAction = function (apiUrl) { return function (params) {
+    return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject();
+}; };
+var getGetPermissionsAction = function (apiUrl) { return function (params) {
+    var role = localStorage.getItem('strapi_role');
+    role ? Promise.resolve(role) : Promise.reject();
+}; };
+export var buildAuthProvider3 = function (apiUrl) {
+    return {
+        login: function (_a) {
+            var username = _a.username, password = _a.password;
+            return getLoginAction(apiUrl)(username, password);
+        },
+        logout: getLogoutAction(apiUrl),
+        checkAuth: getCheckAction(apiUrl),
+        checkError: getErrorAction(apiUrl),
+        getPermissions: getGetPermissionsAction(apiUrl),
+    };
+};
 export var buildAuthProvider = function (apiUrl) {
     return function (type, params) {
-        if (type === AUTH_LOGIN) {
-            var username = params.username, password = params.password;
-            var request = new Request(apiUrl + "/auth/local", {
-                method: 'POST',
-                body: JSON.stringify({
-                    identifier: username,
-                    password: password
-                }),
-                headers: new Headers({ 'Content-Type': 'application/json' }),
-            });
-            return fetch(request)
-                .then(function (response) {
-                if (response.status < 200 || response.status >= 300) {
-                    throw new Error(response.statusText);
-                }
-                return response.json();
-            })
-                .then(function (_a) {
-                var jwt = _a.jwt;
-                localStorage.setItem('strapi_token', jwt);
-            });
+        switch (type) {
+            case AUTH_LOGIN:
+                var username = params.username, password = params.password;
+                return getLoginAction(apiUrl)(username, password);
+            case AUTH_LOGOUT:
+                return getLogoutAction(apiUrl)(params);
+            case AUTH_ERROR:
+                console.log(params);
+                var error = params.error;
+                return getErrorAction(apiUrl)(error);
+            case AUTH_CHECK:
+                return getCheckAction(apiUrl)();
+            case AUTH_GET_PERMISSIONS:
+                return getGetPermissionsAction(apiUrl)();
         }
-        else if (type === AUTH_LOGOUT || type === AUTH_ERROR) {
-            localStorage.removeItem('strapi_token');
-        }
-        else if (type === AUTH_CHECK) {
-            return localStorage.getItem('strapi_token') ? Promise.resolve() : Promise.reject();
-        }
-        return Promise.resolve();
+        return Promise.reject();
     };
 };
 var getAuthHeaders = function () {
