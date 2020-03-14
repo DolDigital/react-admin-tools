@@ -1,0 +1,26 @@
+{
+  "name": "@doldigital/ra-strapi-media",
+  "version": "3.3.1",
+  "main": "lib/index.js",
+  "author": "Luigi Pressello <l.pressello@dol.it>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/preset-react": "^7.8.3"
+  },
+  "scripts": {
+    "develop": "babel src --watch --out-dir lib",
+    "build": "rm -rf lib && babel src --out-dir lib"
+  },
+  "files": [
+    "lib/*"
+  ],
+  "peerDependencies": {
+    "react-admin": "^3.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DolDigital/ra-strapi-media"
+  }
+}

@@ -80,6 +80,16 @@ const _httpClient = (url, options = {}) => {
 }
 
 export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
+  // const uploadUrlFixer = upload => {
+  //   const { url = null } = upload
+  //   if (!url) return upload
+  //   if (/(http:|https:)/.test(url)) return upload
+
+  //   return {
+  //     ...upload,
+  //     url: `${apiUrl}${url}`
+  //   }
+  // }
   return {
     _strapiUpload: files => {
       let formData = new FormData();
@@ -106,8 +116,13 @@ export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
 
       const url = `${apiUrl}/${resource}?${stringify(query)}`
       return httpClient(url).then(({ json }) => {
+        let data = json
+        // if(resource == 'upload/files') {
+        //   data = data.map(uploadUrlFixer)
+        //   console.log('UPLOAD_LIST', data)
+        // }
         return httpClient(`${apiUrl}/${resource}/count?${stringify(filters)}`).then(countResponse => ({
-          data: json,
+          data,
           total: countResponse.json.count || countResponse.json
         }))
       })

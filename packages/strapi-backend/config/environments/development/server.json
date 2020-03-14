@@ -2,7 +2,10 @@
   "host": "localhost",
   "port": 1337,
   "proxy": {
-    "enabled": false
+    "enabled": true,
+    "host": "localhost",
+    "port": 1337,
+    "ssl": false
   },
   "cron": {
     "enabled": false

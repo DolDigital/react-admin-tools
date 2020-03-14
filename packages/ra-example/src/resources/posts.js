@@ -1,6 +1,7 @@
 import React from 'react'
 import { List, Datagrid, TextField, DateField, Edit, SimpleForm, TextInput, DateInput } from 'react-admin'
 import AdvancedInput from '@doldigital/ra-ckeditor-adv-input'
+import StrapiMediaInput from '@doldigital/ra-strapi-media'
 
 export const PostList = props => (
   <List {...props}>
@@ -26,6 +27,8 @@ export const PostEdit = props => (
       <TextInput source="Title" fullWidth />
       <TextInput source="Excerpt" fullWidth />
       <AdvancedInput source="Content" />
+      <StrapiMediaInput multiple={false} source="Thumbnail" fullWidth />
+      <StrapiMediaInput multiple={true} source="Images" fullWidth />
     </SimpleForm>
   </Edit>
 )

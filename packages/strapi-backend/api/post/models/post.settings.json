@@ -22,6 +22,18 @@
     "Slug": {
       "type": "uid",
       "targetField": "Title"
+    },
+    "Thumbnail": {
+      "model": "file",
+      "via": "related",
+      "plugin": "upload",
+      "required": false
+    },
+    "Images": {
+      "collection": "file",
+      "via": "related",
+      "plugin": "upload",
+      "required": false
     }
   }
 }
