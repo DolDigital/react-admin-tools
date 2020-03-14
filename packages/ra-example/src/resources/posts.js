@@ -1,5 +1,6 @@
 import React from 'react'
 import { List, Datagrid, TextField, DateField, Edit, SimpleForm, TextInput, DateInput } from 'react-admin'
+import AdvancedInput from '@doldigital/ra-ckeditor-adv-input'
 
 export const PostList = props => (
   <List {...props}>
@@ -24,7 +25,7 @@ export const PostEdit = props => (
       <DateInput source="updated_at" />
       <TextInput source="Title" fullWidth />
       <TextInput source="Excerpt" fullWidth />
-      <TextInput source="Content" fullWidth />
+      <AdvancedInput source="Content" />
     </SimpleForm>
   </Edit>
 )
