@@ -1,0 +1,34 @@
+{
+    "name": "@doldigital/ra-data-strapi3",
+    "version": "3.3.1",
+    "description": "Strapi data provider for react-admin",
+    "main": "lib/index.js",
+    "module": "esm/index.js",
+    "sideEffects": false,
+    "authors": [
+        "l.pressello"
+    ],
+    "repository": "http://github.com/DolDigital/ra-data-strapi",
+    "homepage": "http://github.com/DolDigital/ra-data-strapi#readme",
+    "bugs": "http://github.com/DolDigital/ra-data-strapi/issues",
+    "license": "MIT",
+    "scripts": {
+        "build": "yarn build:esm && yarn build:cjs",
+        "build:esm": "rimraf ./esm && tsc --module es2015 --target es5 --outDir esm",
+        "build:cjs": "rimraf ./lib && tsc --module commonjs --target es5 --outDir lib",
+        "develop": "rimraf ./lib && rimraf ./esm && tsc --watch"
+    },
+    "dependencies": {
+        "is-mongo-objectid": "^0.0.1",
+        "moment": "^2.24.0",
+        "query-string": "~5.1.1"
+    },
+    "peerDependencies": {
+        "react-admin": "^3.0.0"
+    },
+    "devDependencies": {
+        "cross-env": "^5.2.0",
+        "rimraf": "^2.6.2",
+        "typescript": "3.5.3"
+    }
+}
