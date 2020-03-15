@@ -1,14 +1,13 @@
 # ra-ckeditor-adv-input
-
-### CKEditor5 and Monaco editor for react-admin
+### A react-admin (>=3.0.0) WYSIWYG editor using CKeditor 5 & Monaco Editor for HTML code editing
 
 ## Installation
 This package requires an SVG loader so setup your environment accordingly.
 If you use CRA this package comes with a bundles configuration for @craco/craco
 
-**Add the package**
-
-```yarn add @doldigital/ra-ckeditor-adv-input```
+```
+yarn add @doldigital/ra-ckeditor-adv-input
+```
 
 **Install craco**
 
@@ -40,4 +39,18 @@ module.exports = {
 ...
 ```
 
-## Usage
+## Utilization
+```
+import React from 'react'
+import { Edit, SimpleForm } from 'react-admin'
+import AdvancedInput from '@doldigital/ra-ckeditor-adv-input'
+
+export const PostEdit = props => (
+  <Edit {...props}>
+    <SimpleForm>
+      <AdvancedInput source="Content" />
+      // ...other fields
+    </SimpleForm>
+  </Edit>
+)
+```
