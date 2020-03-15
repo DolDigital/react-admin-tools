@@ -6,6 +6,10 @@ import isValidObjectID from 'is-mongo-objectid';
 const tokenKey = `strapi_token_${window.location.host}`
 const roleKey = `strapi_role_${window.location.host}`
 
+const currentConfig = {
+  apiUrl: null
+}
+
 const getAuthHeader = () => {
   const strapiToken = localStorage.getItem(tokenKey)
   if (strapiToken) {
@@ -79,17 +83,10 @@ const _httpClient = (url, options = {}) => {
     });
 }
 
-export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
-  // const uploadUrlFixer = upload => {
-  //   const { url = null } = upload
-  //   if (!url) return upload
-  //   if (/(http:|https:)/.test(url)) return upload
+export const getApiUrl = () => currentConfig.apiUrl
 
-  //   return {
-  //     ...upload,
-  //     url: `${apiUrl}${url}`
-  //   }
-  // }
+export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
+  currentConfig.apiUrl = apiUrl
   return {
     _strapiUpload: files => {
       let formData = new FormData();
@@ -116,13 +113,8 @@ export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
 
       const url = `${apiUrl}/${resource}?${stringify(query)}`
       return httpClient(url).then(({ json }) => {
-        let data = json
-        // if(resource == 'upload/files') {
-        //   data = data.map(uploadUrlFixer)
-        //   console.log('UPLOAD_LIST', data)
-        // }
         return httpClient(`${apiUrl}/${resource}/count?${stringify(filters)}`).then(countResponse => ({
-          data,
+          data: json,
           total: countResponse.json.count || countResponse.json
         }))
       })

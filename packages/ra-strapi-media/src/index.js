@@ -23,6 +23,7 @@ import ListItemText from '@material-ui/core/ListItemText'
 import { makeStyles } from '@material-ui/core/styles'
 import { useGetList, useDataProvider, useInput } from 'react-admin'
 import { useDropzone } from 'react-dropzone'
+import { getApiUrl } from '@doldigital/ra-data-strapi3'
 
 const useStyles = makeStyles(theme => ({
   modal: {
@@ -37,6 +38,14 @@ const useStyles = makeStyles(theme => ({
     padding: theme.spacing(2, 4, 3),
   },
 }));
+
+const fixUploadUrl = media => {
+  const apiUrl = getApiUrl()
+  return {
+    ...media,
+    url: /(http:|https:)/.test(media.url) ? media.url : `${apiUrl}${media.url}`
+  }
+}
 
 const MediaGallery = props => {
   const {
@@ -131,7 +140,7 @@ const MediaGallery = props => {
       </Dialog>}
       <GridList cellHeight={160} cols={5}>
         {ids.map(key => {
-          const tile = data[key]
+          const tile = fixUploadUrl(data[key])
           return (
             <GridListTile key={tile.id} cols={tile.cols || 1}>
               {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
@@ -192,11 +201,12 @@ const MediaListItem = props => {
       input.onChange(input.value.filter(d => d.id !== item.id))
     }
   }
+  const media = fixUploadUrl(item)
   return <ListItem button>
     <ListItemIcon>
       <HighlightOffIcon onClick={() => handleRemove()} />
     </ListItemIcon>
-    <ListItemText primary={<>{item.name}{/image(.*)/.exec(item.mime) ? <img src={item.url} alt={item.name} style={{ width: '2em' }} /> : null}</>} />
+    <ListItemText primary={<>{media.name}{/image(.*)/.exec(media.mime) ? <img src={media.url} alt={media.name} style={{ width: '2em' }} /> : null}</>} />
   </ListItem>
 }
 
