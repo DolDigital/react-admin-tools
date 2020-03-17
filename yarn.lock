@@ -1378,8 +1378,6 @@
 
 "@doldigital/ra-strapi-media@link:packages/ra-strapi-media":
   version "3.3.1"
-  dependencies:
-    ra-data-strapi "link:packages/ra-data-strapi"
 
 "@emotion/cache@^10.0.27", "@emotion/cache@^10.0.9":
   version "10.0.29"
@@ -11671,7 +11669,7 @@ rc@1.2.8, rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-admin@3.3.1:
+react-admin@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/react-admin/-/react-admin-3.3.1.tgz#8af1ffedbf07b97bdf7f2e256e44ca1c9d7ebb71"
   integrity sha512-4tJRVhOmzqy6XGOoLzDDAxuFqx+y+W/Y+S9jpkIKAdG0cHRZtSSKvTiakuf3yCKYf6lBffLYQUmqifBpKupOCg==

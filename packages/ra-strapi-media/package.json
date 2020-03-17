@@ -7,7 +7,8 @@
   "devDependencies": {
     "@babel/cli": "^7.8.3",
     "@babel/core": "^7.8.3",
-    "@babel/preset-react": "^7.8.3"
+    "@babel/preset-react": "^7.8.3",
+    "ra-data-strapi": "link:../ra-data-strapi"
   },
   "scripts": {
     "develop": "babel src --watch --out-dir lib",
@@ -22,8 +23,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/DolDigital/ra-strapi-media"
-  },
-  "dependencies": {
-    "ra-data-strapi": "link:../ra-data-strapi"
   }
 }
