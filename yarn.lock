@@ -1370,7 +1370,7 @@
     raw-loader "3"
 
 "@doldigital/ra-data-strapi3@link:packages/ra-data-strapi":
-  version "3.3.1"
+  version "3.3.1-fix.1"
   dependencies:
     is-mongo-objectid "^0.0.1"
     moment "^2.24.0"
@@ -4382,7 +4382,7 @@ cron-parser@^2.7.3:
     is-nan "^1.2.1"
     moment-timezone "^0.5.25"
 
-cross-env@^5.0.5, cross-env@^5.2.0:
+cross-env@^5.0.5:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/cross-env/-/cross-env-5.2.1.tgz#b2c76c1ca7add66dc874d11798466094f551b34d"
   integrity sha512-1yHhtcfAd1r4nwQgknowuUNfIT9E8dOMMspC36g45dN+iD1blloi7xp8X/xAIDnjHWyt1uQ8PHk2fkNaym7soQ==
@@ -6590,6 +6590,11 @@ gzip-size@5.1.1:
     duplexer "^0.1.1"
     pify "^4.0.1"
 
+hamming-distance@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/hamming-distance/-/hamming-distance-1.0.0.tgz#39bfa46c61f39e87421e4035a1be4f725dd7b931"
+  integrity sha1-Ob+kbGHznodCHkA1ob5Pcl3XuTE=
+
 handle-thing@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/handle-thing/-/handle-thing-2.0.0.tgz#0e039695ff50c93fc288557d696f3c1dc6776754"
@@ -7041,6 +7046,16 @@ ignore@^5.1.1:
   version "5.1.4"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.1.4.tgz#84b7b3dbe64552b6ef0eca99f6743dbec6d97adf"
   integrity sha512-MzbUSahkTW1u7JpKKjY7LCARd1fU5W2rLdxlM4kdkayuCwZImjkpluF9CM1aLewYJguPDqewLam18Y6AU69A8A==
+
+imagekit@^3.0.4:
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/imagekit/-/imagekit-3.0.4.tgz#f6d19f29825928f3e16dc4f347a770981f00fe03"
+  integrity sha512-upOnQGr/J3EL8wOGFFTn6ELdKR+pCUfIRcizvQA/cxO4Al0H6rx9tChWPxntaZtphfPG3PXWVwVYdksSzxv4PA==
+  dependencies:
+    hamming-distance "^1.0.0"
+    lodash "^4.17.15"
+    request "^2.88.0"
+    uuid "^3.3.3"
 
 immer@1.10.0:
   version "1.10.0"
@@ -13197,6 +13212,11 @@ sliced@1.0.1:
   resolved "https://registry.yarnpkg.com/sliced/-/sliced-1.0.1.tgz#0b3a662b5d04c3177b1926bea82b03f837a2ef41"
   integrity sha1-CzpmK10Ewxd7GSa+qCsD+Dei70E=
 
+slugify@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/slugify/-/slugify-1.4.0.tgz#c9557c653c54b0c7f7a8e786ef3431add676d2cb"
+  integrity sha512-FtLNsMGBSRB/0JOE2A0fxlqjI6fJsgHGS13iTuVT28kViI4JjUiNqp/vyis0ZXYcMnpR3fzGNkv+6vRlI2GwdQ==
+
 snapdragon-node@^2.0.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/snapdragon-node/-/snapdragon-node-2.1.1.tgz#6c175f86ff14bdb0724563e8f3c1b021a286853b"
@@ -14550,11 +14570,6 @@ typescript-tuple@^2.2.1:
   integrity sha512-Zcr0lbt8z5ZdEzERHAMAniTiIKerFCMgd7yjq1fPnDJ43et/k9twIFQMUYff9k5oXcsQ0WpvFcgzK2ZKASoW6Q==
   dependencies:
     typescript-compare "^0.0.2"
-
-typescript@3.5.3:
-  version "3.5.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.5.3.tgz#c830f657f93f1ea846819e929092f5fe5983e977"
-  integrity sha512-ACzBtm/PhXBDId6a6sDJfroT2pOWt/oOnk4/dElG5G33ZL776N3Y6/6bKZJBFpd+b05F3Ct9qDjMeJmRWtE2/g==
 
 ua-parser-js@^0.7.18:
   version "0.7.21"
