@@ -229,13 +229,13 @@ const MediaListItem = props => {
 const LibraryComponent = props => {
   const [pagination, setPagination] = useState((({ page = 1, perPage = 15 }) => ({ page, perPage }))(props))
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
+  const [selected, setSelected] = useState([])
   const payload = {
     pagination,
     sort
   }
 
   const { search = '' } = props
-  console.log('SEARCH', search, typeof search)
   if(search !== '') {
     payload['filter'] = { name_contains: search }
   }
@@ -246,38 +246,81 @@ const LibraryComponent = props => {
     payload
   })
 
+  const handleCheck = tile => event => {
+    const { target: { checked } } = event
+    if(checked) {
+      setSelected([
+        ...selected,
+        tile
+      ])
+    } else {
+      setSelected(selected.filter(t => t.id !== tile.id))
+    }
+  }
+
   if(loading) return <Typography variant="h2">loading...</Typography>
   if(error) return <Typography variant="h5">an error occurred.</Typography>
 
   return (
-    <GridList cellHeight={160} cols={5}>
-      {data.map(file => {
-        const tile = fixUploadUrl(file)
-        return (
-          <GridListTile key={tile.id} cols={tile.cols || 1}>
-            {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
-              :
-              <DescriptionIcon />
-            }
-            <GridListTileBar
-              title={<>
-                <Checkbox
-                  //checked={selected.filter(item => item.id === tile.id).length === 1}
-                  //onChange={() => onSelect(tile)}
-                  color="primary"
-                />
-                {tile.name}</>}
-              subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+    <>
+      <GridList cellHeight={160} cols={5} spacing={6}>
+        {selected.map(tile => {
+          return (
+            <GridListTile key={tile.id} cols={tile.cols || 1}>
+              {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
+                :
+                <DescriptionIcon />
+              }
+              <GridListTileBar
+                title={<>
+                  <Checkbox
+                    checked={true}
+                    //onChange={() => onSelect(tile)}
+                    onChange={handleCheck(tile)}
+                    color="primary"
+                  />
+                  {tile.name}</>}
+                subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
               // actionIcon={
               //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
               //     <DeleteForeverIcon color="secondary" />
               //   </IconButton>
               // }
-            />
-          </GridListTile>
-        )
-      })}
-    </GridList>
+              />
+            </GridListTile>
+          )
+        })}
+      </GridList>
+      <GridList cellHeight={160} cols={5} spacing={6}>
+        {data.map(file => {
+          const tile = fixUploadUrl(file)
+          return (
+            <GridListTile key={tile.id} cols={tile.cols || 1}>
+              {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
+                :
+                <DescriptionIcon />
+              }
+              <GridListTileBar
+                title={<>
+                  <Checkbox
+                    //checked={selected.filter(item => item.id === tile.id).length === 1}
+                    //onChange={() => onSelect(tile)}
+                    onChange={handleCheck(tile)}
+                    color="primary"
+                  />
+                  {tile.name}</>}
+                subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+                // actionIcon={
+                //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
+                //     <DeleteForeverIcon color="secondary" />
+                //   </IconButton>
+                // }
+              />
+            </GridListTile>
+          )
+        })}
+      </GridList>
+    </>
   )
 }
 
