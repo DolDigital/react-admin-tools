@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 import Modal from '@material-ui/core/Modal'
 import Paper from '@material-ui/core/Paper'
@@ -20,22 +21,36 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import DescriptionIcon from '@material-ui/icons/Description'
 import ListItemText from '@material-ui/core/ListItemText'
-import { makeStyles } from '@material-ui/core/styles'
-import { useGetList, useDataProvider, useInput } from 'react-admin'
+import { fade, makeStyles } from '@material-ui/core/styles'
+import { useGetList, useDataProvider, useInput, useQuery } from 'react-admin'
 import { useDropzone } from 'react-dropzone'
 import { getApiUrl } from '@doldigital/ra-data-strapi3'
+
+import AppBar from '@material-ui/core/AppBar';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+
+import Drawer from '@material-ui/core/Drawer';
+import Box from '@material-ui/core/Box';
+
+import Grid from '@material-ui/core/Grid';
+import TextField from '@material-ui/core/TextField';
+import SearchIcon from '@material-ui/icons/Search';
+import Toolbar from '@material-ui/core/Toolbar';
+import InputBase from '@material-ui/core/InputBase';
+
 
 const useStyles = makeStyles(theme => ({
   modal: {
     position: 'absolute',
     width: '80vw',
-    maxHeight: '80vh',
+    height: '80vh',
     left: '10vw',
     top: '10vh',
     backgroundColor: theme.palette.background.paper,
-    border: '2px solid #000',
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3),
+    // border: '2px solid #000',
+     boxShadow: theme.shadows[5],
+    // padding: theme.spacing(2, 4, 3),
   },
 }));
 
@@ -210,6 +225,148 @@ const MediaListItem = props => {
   </ListItem>
 }
 
+
+const LibraryComponent = props => {
+  const [pagination, setPagination] = useState((({ page = 1, perPage = 15 }) => ({ page, perPage }))(props))
+  const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
+  const payload = {
+    pagination,
+    sort
+  }
+
+  const { search = '' } = props
+  console.log('SEARCH', search, typeof search)
+  if(search !== '') {
+    payload['filter'] = { name_contains: search }
+  }
+
+  const { data, loading, error } = useQuery({
+    type: 'getList',
+    resource: 'upload/files',
+    payload
+  })
+
+  if(loading) return <Typography variant="h2">loading...</Typography>
+  if(error) return <Typography variant="h5">an error occurred.</Typography>
+
+  return (
+    <GridList cellHeight={160} cols={5}>
+      {data.map(file => {
+        const tile = fixUploadUrl(file)
+        return (
+          <GridListTile key={tile.id} cols={tile.cols || 1}>
+            {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
+              :
+              <DescriptionIcon />
+            }
+            <GridListTileBar
+              title={<>
+                <Checkbox
+                  //checked={selected.filter(item => item.id === tile.id).length === 1}
+                  //onChange={() => onSelect(tile)}
+                  color="primary"
+                />
+                {tile.name}</>}
+              subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+              // actionIcon={
+              //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
+              //     <DeleteForeverIcon color="secondary" />
+              //   </IconButton>
+              // }
+            />
+          </GridListTile>
+        )
+      })}
+    </GridList>
+  )
+}
+
+
+const TabPanel = props => {
+  const { children, tab, index, ...other } = props
+  if(tab !== index) return null
+
+  return <Box {...other}>{children}</Box>
+}
+
+const TabbedModalContent = props => {
+  const classes = makeStyles((theme) => ({
+    search: {
+      position: 'relative',
+      borderRadius: theme.shape.borderRadius,
+      backgroundColor: fade(theme.palette.common.white, 0.15),
+      '&:hover': {
+        backgroundColor: fade(theme.palette.common.white, 0.25),
+      },
+      marginLeft: 0,
+      width: '100%',
+      [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(1),
+        width: 'auto',
+      },
+    },
+    searchIcon: {
+      padding: theme.spacing(0, 2),
+      height: '100%',
+      position: 'absolute',
+      pointerEvents: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    inputRoot: {
+      color: 'inherit',
+    },
+    inputInput: {
+      padding: theme.spacing(1, 1, 1, 0),
+      // vertical padding + font size from searchIcon
+      paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+      transition: theme.transitions.create('width'),
+      width: '100%',
+      [theme.breakpoints.up('sm')]: {
+        width: '12ch',
+        '&:focus': {
+          width: '20ch',
+        },
+      },
+    },
+  }))()
+  const [tab, setTab] = useState(0)
+  const [search, setSearch] = useState('')
+  return (
+    <>
+      <AppBar position="static">
+        <Toolbar>
+          <Tabs value={tab} onChange={(e, tab) => setTab(tab)}>
+            <Tab label="Libreria" />
+            <Tab label="Carica" />
+          </Tabs>
+          {tab === 0 && <div className={classes.search}>
+            <div className={classes.searchIcon}>
+              <SearchIcon />
+            </div>
+            <InputBase
+              placeholder="Search…"
+              classes={{
+                root: classes.inputRoot,
+                input: classes.inputInput,
+              }}
+              inputProps={{ 'aria-label': 'search' }}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>}
+        </Toolbar>
+      </AppBar>
+      <TabPanel tab={tab} index={0} id="library-tab" style={{position: 'relative'}}>
+        <LibraryComponent search={search} />
+      </TabPanel>
+      <TabPanel tab={tab} index={1}>
+        <Typography variant="h5">Carica</Typography>
+      </TabPanel>
+    </>
+  )
+}
+
 const StrapiMediaInput = props => {
   const { multiple = false } = props
   const [open, setOpen] = useState(false)
@@ -231,8 +388,9 @@ const StrapiMediaInput = props => {
         onClose={() => setOpen(false)}
       >
         <Paper className={classes.modal}>
-          <h2 id="simple-modal-title">Strapi Media</h2>
-          {open && <MediaGallery input={input} multiple={multiple} closeMediaLibrary={() => setOpen(false)} />}
+          {open && <TabbedModalContent onClose={() => setOpen(false)} />}
+          {/*<Typography variant="h4">Strapi Media Library</Typography> */}
+          {/* {open && <MediaGallery input={input} multiple={multiple} closeMediaLibrary={() => setOpen(false)} />} */}
         </Paper>
       </Modal>
       <List component="nav">
