@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 import Modal from '@material-ui/core/Modal'
@@ -38,15 +38,16 @@ import TextField from '@material-ui/core/TextField';
 import SearchIcon from '@material-ui/icons/Search';
 import Toolbar from '@material-ui/core/Toolbar';
 import InputBase from '@material-ui/core/InputBase';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 
 const useStyles = makeStyles(theme => ({
   modal: {
     position: 'absolute',
     width: '80vw',
-    height: '80vh',
+    height: '90vh',
     left: '10vw',
-    top: '10vh',
+    top: '5vh',
     backgroundColor: theme.palette.background.paper,
     // border: '2px solid #000',
      boxShadow: theme.shadows[5],
@@ -225,9 +226,8 @@ const MediaListItem = props => {
   </ListItem>
 }
 
-
 const LibraryComponent = props => {
-  const [pagination, setPagination] = useState((({ page = 1, perPage = 15 }) => ({ page, perPage }))(props))
+  const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
   const [selected, setSelected] = useState([])
   const payload = {
@@ -240,7 +240,7 @@ const LibraryComponent = props => {
     payload['filter'] = { name_contains: search }
   }
 
-  const { data, loading, error } = useQuery({
+  const { data, total, loading, error } = useQuery({
     type: 'getList',
     resource: 'upload/files',
     payload
@@ -264,34 +264,6 @@ const LibraryComponent = props => {
   return (
     <>
       <GridList cellHeight={160} cols={5} spacing={6}>
-        {selected.map(tile => {
-          return (
-            <GridListTile key={tile.id} cols={tile.cols || 1}>
-              {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
-                :
-                <DescriptionIcon />
-              }
-              <GridListTileBar
-                title={<>
-                  <Checkbox
-                    checked={true}
-                    //onChange={() => onSelect(tile)}
-                    onChange={handleCheck(tile)}
-                    color="primary"
-                  />
-                  {tile.name}</>}
-                subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
-              // actionIcon={
-              //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
-              //     <DeleteForeverIcon color="secondary" />
-              //   </IconButton>
-              // }
-              />
-            </GridListTile>
-          )
-        })}
-      </GridList>
-      <GridList cellHeight={160} cols={5} spacing={6}>
         {data.map(file => {
           const tile = fixUploadUrl(file)
           return (
@@ -303,7 +275,7 @@ const LibraryComponent = props => {
               <GridListTileBar
                 title={<>
                   <Checkbox
-                    //checked={selected.filter(item => item.id === tile.id).length === 1}
+                    checked={selected.filter(item => item.id === tile.id).length === 1}
                     //onChange={() => onSelect(tile)}
                     onChange={handleCheck(tile)}
                     color="primary"
@@ -320,6 +292,44 @@ const LibraryComponent = props => {
           )
         })}
       </GridList>
+      {total && <TablePagination
+        rowsPerPageOptions={[10]}
+        component="div"
+        count={total}
+        rowsPerPage={pagination.perPage}
+        page={pagination.page - 1 || 0}
+        onChangePage={(event, newPage) => setPagination({ ...pagination, page: newPage + 1 })}
+      />}
+      <Typography variant="h6">Selected media</Typography>
+      <Box bgcolor="#eee" style={{ marginBottom: '1em', borderBottom: '2px solid #ccc', paddingBottom: '0.5em' }}>
+        <GridList cellHeight={160} cols={5} spacing={6}>
+          {selected.map(tile => {
+            return (
+              <GridListTile key={tile.id} cols={tile.cols || 1}>
+                {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
+                  :
+                  <DescriptionIcon />
+                }
+                <GridListTileBar
+                  title={<>
+                    <Checkbox
+                      checked={true}
+                      onChange={handleCheck(tile)}
+                      color="primary"
+                    />
+                    {tile.name}</>}
+                  subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+                // actionIcon={
+                //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
+                //     <DeleteForeverIcon color="secondary" />
+                //   </IconButton>
+                // }
+                />
+              </GridListTile>
+            )
+          })}
+        </GridList>
+      </Box>
     </>
   )
 }
@@ -401,10 +411,10 @@ const TabbedModalContent = props => {
         </Toolbar>
       </AppBar>
       <TabPanel tab={tab} index={0} id="library-tab" style={{position: 'relative'}}>
-        <LibraryComponent search={search} />
+        <Box style={{ padding: '1.5em' }}><LibraryComponent search={search} /></Box>
       </TabPanel>
       <TabPanel tab={tab} index={1}>
-        <Typography variant="h5">Carica</Typography>
+        <Box style={{ padding: '1.5em' }}><Typography variant="h2">Carica</Typography></Box>
       </TabPanel>
     </>
   )
