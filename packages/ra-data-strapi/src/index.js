@@ -115,7 +115,10 @@ export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
       return httpClient(url).then(({ json }) => {
         return httpClient(`${apiUrl}/${resource}/count?${stringify(filters)}`).then(countResponse => ({
           data: json,
-          total: countResponse.json.count || countResponse.json
+          total: typeof countResponse.json.count === 'undefined' ?
+            countResponse.json
+            :
+            isNaN(countResponse.json.count) ? countResponse.json : countResponse.json.count
         }))
       })
     },
