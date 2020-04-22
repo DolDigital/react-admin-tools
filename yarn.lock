@@ -11850,6 +11850,13 @@ react-final-form@^6.3.3:
     "@babel/runtime" "^7.8.3"
     ts-essentials "^5.0.0"
 
+react-graceful-image@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/react-graceful-image/-/react-graceful-image-1.3.0.tgz#02b9ae07d38e1672d05e39f859aea28108dafd67"
+  integrity sha512-VfD8nSQ/H8OSetE6QDib93vXuHBgARDG5rEC09SgqTUV6PwaseLBLqDQ9PXq/VrdX46j48sPXzkV3cEdo0GaYg==
+  dependencies:
+    lodash.throttle "^4.1.1"
+
 react-helmet@^5.2.0:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/react-helmet/-/react-helmet-5.2.1.tgz#16a7192fdd09951f8e0fe22ffccbf9bb3e591ffa"

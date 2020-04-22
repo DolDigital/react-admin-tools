@@ -38,8 +38,9 @@ import TextField from '@material-ui/core/TextField';
 import SearchIcon from '@material-ui/icons/Search';
 import Toolbar from '@material-ui/core/Toolbar';
 import InputBase from '@material-ui/core/InputBase';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@material-ui/core/CircularProgress'
 
+import Image from 'react-graceful-image'
 
 const useStyles = makeStyles(theme => ({
   modal: {
@@ -53,6 +54,59 @@ const useStyles = makeStyles(theme => ({
      boxShadow: theme.shadows[5],
     // padding: theme.spacing(2, 4, 3),
   },
+  appBar: {
+    position: 'absolute'
+  },
+  modalScroll: {
+    overflow: 'scroll',
+    height: '100%'
+    // height: '70vh'
+  },
+  footer: {
+    position: 'absolute',
+    bottom: '0',
+    width: '100%',
+    backgroundColor: theme.palette.background.paper
+  },
+  search: {
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: fade(theme.palette.common.white, 0.15),
+    '&:hover': {
+      backgroundColor: fade(theme.palette.common.white, 0.25),
+    },
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      marginLeft: theme.spacing(1),
+      width: 'auto',
+    },
+  },
+  searchIcon: {
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputRoot: {
+    color: 'inherit',
+  },
+  inputInput: {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      width: '12ch',
+      '&:focus': {
+        width: '20ch',
+      },
+    },
+  }
 }));
 
 const fixUploadUrl = media => {
@@ -237,7 +291,7 @@ const LibraryComponent = props => {
 
   const { search = '' } = props
   if(search !== '') {
-    payload['filter'] = { name_contains: search }
+    payload['filter'] = isNaN(search) ? { name: search } : { name_contains: search }
   }
 
   const { data, total, loading, error } = useQuery({
@@ -258,7 +312,7 @@ const LibraryComponent = props => {
     }
   }
 
-  if(loading) return <Typography variant="h2">loading...</Typography>
+  if (loading) return <Typography variant="h2"><CircularProgress /></Typography>
   if(error) return <Typography variant="h5">an error occurred.</Typography>
 
   return (
@@ -268,7 +322,10 @@ const LibraryComponent = props => {
           const tile = fixUploadUrl(file)
           return (
             <GridListTile key={tile.id} cols={tile.cols || 1}>
-              {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
+              {/image(.*)/.exec(tile.mime) ? <Image
+                src={tile.url}
+                alt={tile.name}
+                />
                 :
                 <DescriptionIcon />
               }
@@ -281,7 +338,7 @@ const LibraryComponent = props => {
                     color="primary"
                   />
                   {tile.name}</>}
-                subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+                // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
                 // actionIcon={
                 //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
                 //     <DeleteForeverIcon color="secondary" />
@@ -318,7 +375,7 @@ const LibraryComponent = props => {
                       color="primary"
                     />
                     {tile.name}</>}
-                  subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
+                // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
                 // actionIcon={
                 //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
                 //     <DeleteForeverIcon color="secondary" />
@@ -343,52 +400,16 @@ const TabPanel = props => {
 }
 
 const TabbedModalContent = props => {
-  const classes = makeStyles((theme) => ({
-    search: {
-      position: 'relative',
-      borderRadius: theme.shape.borderRadius,
-      backgroundColor: fade(theme.palette.common.white, 0.15),
-      '&:hover': {
-        backgroundColor: fade(theme.palette.common.white, 0.25),
-      },
-      marginLeft: 0,
-      width: '100%',
-      [theme.breakpoints.up('sm')]: {
-        marginLeft: theme.spacing(1),
-        width: 'auto',
-      },
-    },
-    searchIcon: {
-      padding: theme.spacing(0, 2),
-      height: '100%',
-      position: 'absolute',
-      pointerEvents: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    inputRoot: {
-      color: 'inherit',
-    },
-    inputInput: {
-      padding: theme.spacing(1, 1, 1, 0),
-      // vertical padding + font size from searchIcon
-      paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-      transition: theme.transitions.create('width'),
-      width: '100%',
-      [theme.breakpoints.up('sm')]: {
-        width: '12ch',
-        '&:focus': {
-          width: '20ch',
-        },
-      },
-    },
-  }))()
+  const classes = useStyles()
+  
+  const { onClose } = props
+
   const [tab, setTab] = useState(0)
   const [search, setSearch] = useState('')
+
   return (
     <>
-      <AppBar position="static">
+      <AppBar position="static" className={classes.appBar}>
         <Toolbar>
           <Tabs value={tab} onChange={(e, tab) => setTab(tab)}>
             <Tab label="Libreria" />
@@ -410,12 +431,17 @@ const TabbedModalContent = props => {
           </div>}
         </Toolbar>
       </AppBar>
-      <TabPanel tab={tab} index={0} id="library-tab" style={{position: 'relative'}}>
-        <Box style={{ padding: '1.5em' }}><LibraryComponent search={search} /></Box>
-      </TabPanel>
-      <TabPanel tab={tab} index={1}>
-        <Box style={{ padding: '1.5em' }}><Typography variant="h2">Carica</Typography></Box>
-      </TabPanel>
+      <Box className={classes.modalScroll}>
+        <TabPanel tab={tab} index={0} id="library-tab" style={{ position: 'relative' }}>
+          <Box style={{ padding: '1.5em' }}><LibraryComponent search={search} /></Box>
+        </TabPanel>
+        <TabPanel tab={tab} index={1}>
+          <Box style={{ padding: '1.5em' }}><Typography variant="h2">Carica</Typography></Box>
+        </TabPanel>
+      </Box>
+      <Box display="flex" flexDirection="row-reverse" mt={4} className={classes.footer}>
+        <Button style={{ marginRight: '2em' }} variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
+      </Box>
     </>
   )
 }
