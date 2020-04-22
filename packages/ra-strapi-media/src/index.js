@@ -45,6 +45,7 @@ import Image from 'react-graceful-image'
 const useStyles = makeStyles(theme => ({
   modal: {
     position: 'absolute',
+    overflow: 'hidden',
     width: '80vw',
     height: '90vh',
     left: '10vw',
@@ -59,7 +60,9 @@ const useStyles = makeStyles(theme => ({
   },
   modalScroll: {
     overflow: 'scroll',
-    height: '100%'
+    height: '100%',
+    paddingTop: '3.7em !important',
+    paddingBottom: '4.2em !important'
     // height: '70vh'
   },
   footer: {
@@ -283,13 +286,13 @@ const MediaListItem = props => {
 const LibraryComponent = props => {
   const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
-  const [selected, setSelected] = useState([])
+
   const payload = {
     pagination,
     sort
   }
 
-  const { search = '' } = props
+  const { search = '', selected = [], onCheck = null } = props
   if(search !== '') {
     payload['filter'] = isNaN(search) ? { name: search } : { name_contains: search }
   }
@@ -302,14 +305,7 @@ const LibraryComponent = props => {
 
   const handleCheck = tile => event => {
     const { target: { checked } } = event
-    if(checked) {
-      setSelected([
-        ...selected,
-        tile
-      ])
-    } else {
-      setSelected(selected.filter(t => t.id !== tile.id))
-    }
+    if(onCheck) onCheck(tile, checked)
   }
 
   if (loading) return <Typography variant="h2"><CircularProgress /></Typography>
@@ -325,6 +321,7 @@ const LibraryComponent = props => {
               {/image(.*)/.exec(tile.mime) ? <Image
                 src={tile.url}
                 alt={tile.name}
+                width="100%"
                 />
                 :
                 <DescriptionIcon />
@@ -406,6 +403,19 @@ const TabbedModalContent = props => {
 
   const [tab, setTab] = useState(0)
   const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState([])
+  const onCheck = (file, checked) => {
+    if (checked) {
+      setSelected([
+        ...selected,
+        file
+      ])
+    } else {
+      setSelected(selected.filter(t => t.id !== file.id))
+    }
+  }
+
+  const libraryProps = { selected, onCheck, search }
 
   return (
     <>
@@ -429,18 +439,18 @@ const TabbedModalContent = props => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>}
+          <Button style={{ marginRight: '2em' }} variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
         </Toolbar>
       </AppBar>
       <Box className={classes.modalScroll}>
         <TabPanel tab={tab} index={0} id="library-tab" style={{ position: 'relative' }}>
-          <Box style={{ padding: '1.5em' }}><LibraryComponent search={search} /></Box>
+          <Box style={{ padding: '1.5em' }}>
+            <LibraryComponent {...libraryProps} />
+          </Box>
         </TabPanel>
         <TabPanel tab={tab} index={1}>
           <Box style={{ padding: '1.5em' }}><Typography variant="h2">Carica</Typography></Box>
         </TabPanel>
-      </Box>
-      <Box display="flex" flexDirection="row-reverse" mt={4} className={classes.footer}>
-        <Button style={{ marginRight: '2em' }} variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
       </Box>
     </>
   )
