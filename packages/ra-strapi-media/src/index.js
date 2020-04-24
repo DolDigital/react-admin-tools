@@ -399,7 +399,7 @@ const TabPanel = props => {
 const TabbedModalContent = props => {
   const classes = useStyles()
   
-  const { onClose, input } = props
+  const { onClose, input, multiple = false } = props
 
   const _selected = (input.value ? (Array.isArray(input.value) ? input.value : [input.value]) : []).map(f => fixUploadUrl(f));
 
@@ -407,15 +407,18 @@ const TabbedModalContent = props => {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(_selected)
   const onCheck = (file, checked) => {
+    const currentlySelected = multiple ? selected : []
     if (checked) {
       setSelected([
-        ...selected,
+        ...currentlySelected,
         file
       ])
     } else {
-      setSelected(selected.filter(t => t.id !== file.id))
+      setSelected(currentlySelected.filter(t => t.id !== file.id))
     }
   }
+  
+  useEffect(() => input.onChange(selected.length === 0 ? false : selected.length === 1 ? selected[0] : selected), [selected])
 
   const libraryProps = { selected, onCheck, search }
 
@@ -479,7 +482,7 @@ const StrapiMediaInput = props => {
         onClose={() => setOpen(false)}
       >
         <Paper className={classes.modal}>
-          {open && <TabbedModalContent onClose={() => setOpen(false)} input={input} />}
+          {open && <TabbedModalContent onClose={() => setOpen(false)} input={input} multiple={multiple} />}
           {/*<Typography variant="h4">Strapi Media Library</Typography> */}
           {/* {open && <MediaGallery input={input} multiple={multiple} closeMediaLibrary={() => setOpen(false)} />} */}
         </Paper>
