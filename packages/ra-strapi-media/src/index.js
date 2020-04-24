@@ -42,6 +42,16 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 
 import Image from 'react-graceful-image'
 
+const imageMimeTypes = [
+  'image/bmp',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/svg+xml',
+  'image/tiff',
+  'image/webp'
+]
+
 const useStyles = makeStyles(theme => ({
   modal: {
     position: 'absolute',
@@ -71,6 +81,9 @@ const useStyles = makeStyles(theme => ({
     width: '100%',
     backgroundColor: theme.palette.background.paper
   },
+  searchWrapper: {
+    flexGrow: 1
+  },
   search: {
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -79,7 +92,8 @@ const useStyles = makeStyles(theme => ({
       backgroundColor: fade(theme.palette.common.white, 0.25),
     },
     marginLeft: 0,
-    width: '100%',
+    width: '50% !important',
+    minWidth: '10em',
     [theme.breakpoints.up('sm')]: {
       marginLeft: theme.spacing(1),
       width: 'auto',
@@ -109,6 +123,10 @@ const useStyles = makeStyles(theme => ({
         width: '20ch',
       },
     },
+  },
+  mediaGridList: {
+    flexWrap: 'nowrap',
+    transform: 'translate(20)'
   }
 }));
 
@@ -292,9 +310,28 @@ const LibraryComponent = props => {
     sort
   }
 
-  const { search = '', selected = [], onCheck = null } = props
+  const { search = '', selected = [], onCheck = null, allowedTypes = null } = props
+  const filter = {}
+
+  if(allowedTypes) {
+    if(allowedTypes === 'images') {
+      filter.mime = imageMimeTypes
+    }
+    else if(allowedTypes === 'no-images') {
+      filter.mime_nin = imageMimeTypes
+    }
+    else if(Array.isArray(allowedTypes)) {
+      filter.mime = allowedTypes
+    }
+  }
+
   if(search !== '') {
-    payload['filter'] = isNaN(search) ? { name: search } : { name_contains: search }
+    if(isNaN(search)) filter.name = search
+    else filter.name_contains = search
+  }
+
+  if(Object.keys(filter).length) {
+    payload['filter'] = filter
   }
 
   const { data, total, loading, error } = useQuery({
@@ -388,6 +425,74 @@ const LibraryComponent = props => {
   )
 }
 
+const UploadComponent = props => {
+  const {
+    options: { inputProps: inputPropsOptions, ...options } = {},
+    accept,
+    maxSize,
+    minSize,
+    multiple,
+    input,
+    closeMediaLibrary
+  } = props
+
+  const dataProvider = useDataProvider()
+  const [uploaded, setUploaded] = useState([])
+
+  const onDrop = (newFiles, rejectedFiles, event) => {
+    dataProvider._strapiUpload(newFiles).then(r => {
+      setUploaded([...uploaded, ...r.data])
+    })
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    ...options,
+    accept,
+    maxSize,
+    minSize,
+    multiple,
+    onDrop,
+  })
+
+
+  return (
+    <>
+      <GridList cellHeight={160} cols={5} spacing={6} style={{margin: '2.2em 0 2em 0'}}>
+        {uploaded.map(file => {
+          const tile = fixUploadUrl(file)
+          return (
+            <GridListTile key={tile.id} cols={tile.cols || 1}>
+              {/image(.*)/.exec(tile.mime) ? <Image
+                src={tile.url}
+                alt={tile.name}
+                width="100%"
+              />
+                :
+                <DescriptionIcon />
+              }
+              <GridListTileBar
+                title={tile.name}
+                />
+            </GridListTile>
+          )
+        })}
+      </GridList>
+      <div
+        data-testid="dropzone"
+        style={{ border: '3px dashed #ccc', padding: '2em', textAlign: 'center' }}
+        {...getRootProps()}
+      >
+        <input
+          {...getInputProps({
+            ...inputPropsOptions,
+          })}
+        />
+        Upload new files by clicking or dropping here.
+    </div>
+    </>
+  )
+}
+
 
 const TabPanel = props => {
   const { children, tab, index, ...other } = props
@@ -399,7 +504,7 @@ const TabPanel = props => {
 const TabbedModalContent = props => {
   const classes = useStyles()
   
-  const { onClose, input, multiple = false } = props
+  const { onClose, input, multiple = false, allowedTypes = null } = props
 
   const _selected = (input.value ? (Array.isArray(input.value) ? input.value : [input.value]) : []).map(f => fixUploadUrl(f));
 
@@ -420,7 +525,12 @@ const TabbedModalContent = props => {
   
   useEffect(() => input.onChange(selected.length === 0 ? false : selected.length === 1 ? selected[0] : selected), [selected])
 
-  const libraryProps = { selected, onCheck, search }
+  const libraryProps = {
+    selected,
+    onCheck,
+    search,
+    allowedTypes
+  }
 
   return (
     <>
@@ -430,21 +540,23 @@ const TabbedModalContent = props => {
             <Tab label="Libreria" />
             <Tab label="Carica" />
           </Tabs>
-          {tab === 0 && <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <InputBase
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>}
-          <Button style={{ marginRight: '2em' }} variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
+          <Box className={classes.searchWrapper}>
+            {tab === 0 && <Box className={classes.search}>
+              <div className={classes.searchIcon}>
+                <SearchIcon />
+              </div>
+              <InputBase
+                placeholder="Search…"
+                classes={{
+                  root: classes.inputRoot,
+                  input: classes.inputInput,
+                }}
+                inputProps={{ 'aria-label': 'search' }}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </Box>}
+          </Box>
+          <Button variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
         </Toolbar>
       </AppBar>
       <Box className={classes.modalScroll}>
@@ -454,15 +566,47 @@ const TabbedModalContent = props => {
           </Box>
         </TabPanel>
         <TabPanel tab={tab} index={1}>
-          <Box style={{ padding: '1.5em' }}><Typography variant="h2">Carica</Typography></Box>
+          <Box style={{ padding: '1.5em' }}>
+            <Typography variant="h2">Carica</Typography>
+            <UploadComponent />
+          </Box>
         </TabPanel>
       </Box>
     </>
   )
 }
 
+const MediaList = props => {
+  const { media = [], ...otherProps } = props
+  const items = Array.isArray(media) ? media : [media]
+  return (
+    <GridList {...otherProps}>
+      {
+        items.map(items => {
+          const _media = fixUploadUrl(items)
+          return (
+            <GridListTile key={_media.id} cols={1}>
+              {/image(.*)/.exec(_media.mime) ? <Image
+                src={_media.url}
+                alt={_media.name}
+                width="100%"
+              />
+                :
+                <DescriptionIcon />
+              }
+              <GridListTileBar
+                title={_media.name}
+              />
+            </GridListTile>
+          )
+        })
+      }
+    </GridList>
+  )
+}
+
 const StrapiMediaInput = props => {
-  const { multiple = false } = props
+  const { multiple = false, listProps = {}, allowedTypes = null, basePath = null, ...otherProps } = props
   const [open, setOpen] = useState(false)
   const classes = useStyles();
   const { input } = useInput({ ...props })
@@ -473,6 +617,8 @@ const StrapiMediaInput = props => {
     value = input.value || false
   }
 
+  const gridCols = 4.5
+
   return (
     <>
       <Modal
@@ -482,20 +628,13 @@ const StrapiMediaInput = props => {
         onClose={() => setOpen(false)}
       >
         <Paper className={classes.modal}>
-          {open && <TabbedModalContent onClose={() => setOpen(false)} input={input} multiple={multiple} />}
-          {/*<Typography variant="h4">Strapi Media Library</Typography> */}
-          {/* {open && <MediaGallery input={input} multiple={multiple} closeMediaLibrary={() => setOpen(false)} />} */}
+          {open && <TabbedModalContent onClose={() => setOpen(false)} input={input} multiple={multiple} allowedTypes={allowedTypes} />}
         </Paper>
       </Modal>
-      <List component="nav">
-        {
-          multiple && value.map(media => <MediaListItem key={media.id} item={media} input={input} />)
-        }
-        {
-          !multiple && value ? <MediaListItem item={value} input={input} /> : null
-        }
-      </List>
-      <Button onClick={() => setOpen(true)}>Media Library</Button>
+      <Box style={{padding: '1.2em 0 2em 0'}}>
+        <MediaList media={value} cellHeight={160} cols={gridCols} className={classes.mediaGridList} {...listProps} />
+        <Button style={{marginTop: '1em'}} onClick={() => setOpen(true)} {...otherProps}>Media Library</Button>
+      </Box>
     </>
   )
 }
