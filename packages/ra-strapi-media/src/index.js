@@ -39,6 +39,8 @@ import SearchIcon from '@material-ui/icons/Search';
 import Toolbar from '@material-ui/core/Toolbar';
 import InputBase from '@material-ui/core/InputBase';
 import CircularProgress from '@material-ui/core/CircularProgress'
+import InputAdornment from '@material-ui/core/InputAdornment'
+import ClearIcon from '@material-ui/icons/Clear'
 
 import Image from 'react-graceful-image'
 
@@ -92,8 +94,6 @@ const useStyles = makeStyles(theme => ({
       backgroundColor: fade(theme.palette.common.white, 0.25),
     },
     marginLeft: 0,
-    width: '50% !important',
-    minWidth: '10em',
     [theme.breakpoints.up('sm')]: {
       marginLeft: theme.spacing(1),
       width: 'auto',
@@ -118,9 +118,9 @@ const useStyles = makeStyles(theme => ({
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('sm')]: {
-      width: '12ch',
+      width: '90%',
       '&:focus': {
-        width: '20ch',
+        width: '100%',
       },
     },
   },
@@ -304,6 +304,8 @@ const MediaListItem = props => {
 const LibraryComponent = props => {
   const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
+  const [deleteDialog, setDeleteDialog] = useState(false)
+  const dataProvider = useDataProvider()
 
   const payload = {
     pagination,
@@ -345,12 +347,48 @@ const LibraryComponent = props => {
     if(onCheck) onCheck(tile, checked)
   }
 
+  const handleDelete = media => {
+    setDeleteDialog(media)
+  }
+
+  const proceedWithDelete = media => {
+    dataProvider.delete('upload/files', { id: media.id }).then(r => {
+      if(onCheck) onCheck(media, false)
+      setDeleteDialog(false)
+      setPagination({...pagination, page: 1, rnd: Math.random()})
+    })
+  }
+
   if (loading) return <Typography variant="h2"><CircularProgress /></Typography>
   if(error) return <Typography variant="h5">an error occurred.</Typography>
 
   return (
     <>
-      <GridList cellHeight={160} cols={5} spacing={6}>
+      {deleteDialog && <Dialog
+        open={deleteDialog !== false}
+        onClose={() => setDeleteDialog(false)}
+        aria-labelledby="draggable-dialog-title"
+      >
+        <DialogTitle id="draggable-dialog-title">
+          Delete media
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you shure you want to delete "{deleteDialog.name}"?<br />
+            The action is irreversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={() => setDeleteDialog(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={() => proceedWithDelete(deleteDialog)} color="primary">
+            CONFIRM DELETION
+          </Button>
+        </DialogActions>
+      </Dialog>}
+      {search !== '' && <Box><Typography variant="h6">Risultati per "{search}"</Typography></Box>}
+      {data.length > 0 && <GridList cellHeight={160} cols={5} spacing={6}>
         {data.map(file => {
           const tile = fixUploadUrl(file)
           return (
@@ -373,17 +411,18 @@ const LibraryComponent = props => {
                   />
                   {tile.name}</>}
                 // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
-                // actionIcon={
-                //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
-                //     <DeleteForeverIcon color="secondary" />
-                //   </IconButton>
-                // }
+                actionIcon={
+                  <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
+                    <DeleteForeverIcon color="secondary" />
+                  </IconButton>
+                }
               />
             </GridListTile>
           )
         })}
-      </GridList>
-      {total && <TablePagination
+      </GridList>}
+      {data.length === 0 && <Box><Typography variant="h4">Nessun risultato trovato</Typography></Box>}
+      {(data.length > 0 && total) && <TablePagination
         rowsPerPageOptions={[10]}
         component="div"
         count={total}
@@ -410,11 +449,11 @@ const LibraryComponent = props => {
                     />
                     {tile.name}</>}
                 // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
-                // actionIcon={
-                //   <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
-                //     <DeleteForeverIcon color="secondary" />
-                //   </IconButton>
-                // }
+                actionIcon={
+                  <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
+                    <DeleteForeverIcon color="secondary" />
+                  </IconButton>
+                }
                 />
               </GridListTile>
             )
@@ -506,13 +545,13 @@ const TabbedModalContent = props => {
   
   const { onClose, input, multiple = false, allowedTypes = null } = props
 
-  const _selected = (input.value ? (Array.isArray(input.value) ? input.value : [input.value]) : []).map(f => fixUploadUrl(f));
+  const _selected = (input.value !== false ? (Array.isArray(input.value) ? input.value : [input.value]) : []).map(f => fixUploadUrl(f));
 
   const [tab, setTab] = useState(0)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(_selected)
   const onCheck = (file, checked) => {
-    const currentlySelected = multiple ? selected : []
+    const currentlySelected = multiple ? selected : checked ? [] : selected
     if (checked) {
       setSelected([
         ...currentlySelected,
@@ -541,20 +580,27 @@ const TabbedModalContent = props => {
             <Tab label="Carica" />
           </Tabs>
           <Box className={classes.searchWrapper}>
-            {tab === 0 && <Box className={classes.search}>
-              <div className={classes.searchIcon}>
-                <SearchIcon />
-              </div>
-              <InputBase
-                placeholder="Search…"
-                classes={{
-                  root: classes.inputRoot,
-                  input: classes.inputInput,
-                }}
-                inputProps={{ 'aria-label': 'search' }}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </Box>}
+            <Box style={{width: '50%'}}>
+              {tab === 0 && <Box className={classes.search}>
+                <div className={classes.searchIcon}>
+                  <SearchIcon />
+                </div>
+                <InputBase
+                  fullWidth
+                  placeholder="Search…"
+                  classes={{
+                    root: classes.inputRoot,
+                    input: classes.inputInput,
+                  }}
+                  inputProps={{ 'aria-label': 'search' }}
+                  onChange={(e) => setSearch(e.target.value)}
+                  value={search}
+                  endAdornment={search !== '' && <InputAdornment position="end">
+                    <IconButton style={{ color: 'inherit' }} onClick={() => setSearch('')}><ClearIcon /></IconButton>
+                    </InputAdornment>}
+                />
+              </Box>}
+            </Box>
           </Box>
           <Button variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
         </Toolbar>
@@ -567,7 +613,7 @@ const TabbedModalContent = props => {
         </TabPanel>
         <TabPanel tab={tab} index={1}>
           <Box style={{ padding: '1.5em' }}>
-            <Typography variant="h2">Carica</Typography>
+            <Typography variant="h2">Upload</Typography>
             <UploadComponent />
           </Box>
         </TabPanel>
@@ -579,6 +625,9 @@ const TabbedModalContent = props => {
 const MediaList = props => {
   const { media = [], ...otherProps } = props
   const items = Array.isArray(media) ? media : [media]
+  
+  if(media === false) return null
+
   return (
     <GridList {...otherProps}>
       {
