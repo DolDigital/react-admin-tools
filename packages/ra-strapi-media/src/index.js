@@ -495,6 +495,7 @@ const MediaList = props => {
 
 const StrapiMediaInput = props => {
   const { multiple = false, listProps = {}, allowedTypes = null, basePath = null, ...otherProps } = props
+  const { label = otherProps.source } = otherProps
   const [open, setOpen] = useState(false)
   const classes = useStyles();
   const { input } = useInput({ ...props })
@@ -520,6 +521,7 @@ const StrapiMediaInput = props => {
         </Paper>
       </Modal>
       <Box style={{padding: '1.2em 0 2em 0'}}>
+        <Typography variant="subtitle1">{label}</Typography>
         <MediaList media={value} cellHeight={160} cols={gridCols} className={classes.mediaGridList} {...listProps} />
         <Button style={{marginTop: '1em'}} onClick={() => setOpen(true)} {...otherProps}>Media Library</Button>
       </Box>
