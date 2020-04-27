@@ -27,8 +27,8 @@ export const PostEdit = props => (
       <TextInput source="Title" fullWidth />
       <TextInput source="Excerpt" fullWidth />
       <AdvancedInput source="Content" />
-      <StrapiMediaInput multiple={false} source="Thumbnail" fullWidth />
-      <StrapiMediaInput multiple={true} source="Images" fullWidth />
+      <StrapiMediaInput multiple={false} listProps={{component: 'nav'}} allowedTypes='images' source="Thumbnail" variant="contained" />
+      <StrapiMediaInput multiple={true} source="Images" variant="outlined" />
     </SimpleForm>
   </Edit>
 )

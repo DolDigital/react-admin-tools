@@ -28,8 +28,12 @@ const computeFilters = filters => {
       returner[f] = flattened[f];
     } else if (isValidObjectID(flattened[f])) {
       returner[f] = flattened[f];
+    } else if (Array.isArray(flattened[f])) {
+      if(/.*_n?in/.test(`${f}`)) returner[`${f}`] = flattened[f]
+      else returner[`${f}_in`] = flattened[f];
     } else {
-      returner[`${f}_contains`] = flattened[f];
+      if (/.*_contains/.test(`${f}`)) returner[`${f}`] = flattened[f]
+      else returner[`${f}_contains`] = flattened[f];
     }
   });
 
@@ -88,9 +92,14 @@ export const getApiUrl = () => currentConfig.apiUrl
 export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
   currentConfig.apiUrl = apiUrl
   return {
-    _strapiUpload: files => {
+    _strapiUpload: (files, data = null) => {
       let formData = new FormData();
-      files.forEach(file => formData.append('files', file))
+      const _data = Array.isArray(files) ? null : data
+      const _files = Array.isArray(files) ? files : [files]
+      _files.forEach(file => formData.append('files', file))
+      if(_data) {
+        Object.keys(_data).forEach(key => formData.append(key, _data[key]))
+      }
       return fetch(`${apiUrl}/upload`, {
         method: 'POST',
         body: formData

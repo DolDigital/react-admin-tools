@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, createRef, forwardRef } from 'react'
 import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 import Modal from '@material-ui/core/Modal'
@@ -41,8 +41,12 @@ import InputBase from '@material-ui/core/InputBase';
 import CircularProgress from '@material-ui/core/CircularProgress'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ClearIcon from '@material-ui/icons/Clear'
+import InfoIcon from '@material-ui/icons/Info'
 
 import Image from 'react-graceful-image'
+
+import ReactCrop from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 
 const imageMimeTypes = [
   'image/bmp',
@@ -138,10 +142,62 @@ const fixUploadUrl = media => {
   }
 }
 
+const ImageCropper = props => {
+  const { image, onChange = null } = props
+  console.log('Render ImageCropper image', image)
+  const [crop, setCrop] = useState({})
+  const [cropImage, setCropImage] = useState({})
+  const dataProvider = useDataProvider()
+  
+  const handleCrop = () => {
+    const wratio = cropImage.naturalWidth / cropImage.width
+    const hratio = cropImage.naturalHeight / cropImage.height
+    const rx = Math.floor(crop.x * wratio)
+    const ry = Math.floor(crop.y * hratio)
+    const rw = Math.floor(crop.width * wratio)
+    const rh = Math.floor(crop.height * hratio)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = rw
+    canvas.height = rh
+    const context = canvas.getContext('2d')
+
+    context.drawImage(
+      cropImage,
+      rx, ry,
+      rw, rh,
+      0, 0,
+      rw, rh
+    )
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        blob.name = image.name
+        dataProvider._strapiUpload(blob, {id: image.id}).then(r => {
+          if(onChange && r.data.length) onChange(r.data[0])
+        })
+      })
+    })
+  }
+  return (
+    <>
+      <ReactCrop
+        src={image.url}
+        crop={crop}
+        onChange={newCrop => setCrop(newCrop)}
+        onImageLoaded={image => setCropImage(image)}
+        crossorigin="anonymous"
+      />
+      <Button onClick={handleCrop}>CROP</Button>
+    </>
+  )
+}
+
 const LibraryComponent = props => {
   const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
   const [deleteDialog, setDeleteDialog] = useState(false)
+  const [infoView, setInfoView] = useState(false)
   const dataProvider = useDataProvider()
 
   const payload = {
@@ -188,10 +244,13 @@ const LibraryComponent = props => {
     setDeleteDialog(media)
   }
 
+  const handleInfoView = media => setInfoView(media)
+
   const proceedWithDelete = media => {
     dataProvider.delete('upload/files', { id: media.id }).then(r => {
       if(onCheck) onCheck(media, false)
       setDeleteDialog(false)
+      setInfoView(false)
       setPagination({...pagination, page: 1, rnd: Math.random()})
     })
   }
@@ -199,31 +258,53 @@ const LibraryComponent = props => {
   if (loading) return <Typography variant="h2"><CircularProgress /></Typography>
   if(error) return <Typography variant="h5">an error occurred.</Typography>
 
-  return (
-    <>
-      {deleteDialog && <Dialog
-        open={deleteDialog !== false}
-        onClose={() => setDeleteDialog(false)}
-        aria-labelledby="draggable-dialog-title"
-      >
-        <DialogTitle id="draggable-dialog-title">
-          Delete media
+  if(infoView) {
+    return (
+      <>
+        {deleteDialog && <Dialog
+          open={deleteDialog !== false}
+          onClose={() => setDeleteDialog(false)}
+          aria-labelledby="draggable-dialog-title"
+        >
+          <DialogTitle id="draggable-dialog-title">
+            Delete media
         </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you shure you want to delete "{deleteDialog.name}"?<br />
+          <DialogContent>
+            <DialogContentText>
+              Are you shure you want to delete "{deleteDialog.name}"?<br />
             The action is irreversible.
           </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button autoFocus onClick={() => setDeleteDialog(false)} color="primary">
-            Cancel
+          </DialogContent>
+          <DialogActions>
+            <Button autoFocus onClick={() => setDeleteDialog(false)} color="primary">
+              Cancel
           </Button>
-          <Button onClick={() => proceedWithDelete(deleteDialog)} color="primary">
-            CONFIRM DELETION
+            <Button onClick={() => proceedWithDelete(deleteDialog)} color="primary">
+              CONFIRM DELETION
           </Button>
-        </DialogActions>
-      </Dialog>}
+          </DialogActions>
+        </Dialog>}
+        <Box>
+          <Typography variant="h3">Info box</Typography>
+          <Box display="flex">
+            <Box>
+              <ImageCropper image={infoView} onChange={(newImage) => {
+                setInfoView(fixUploadUrl(newImage))
+                setPagination({ ...pagination, rnd: Math.random() })
+              }} />
+            </Box>
+            <Box>
+              <Button onClick={() => handleDelete(infoView)}>Delete</Button>
+            </Box>
+          </Box>
+          
+        </Box>
+      </>
+    )
+  }
+
+  return (
+    <>
       {search !== '' && <Box><Typography variant="h6">Risultati per "{search}"</Typography></Box>}
       {data.length > 0 && <GridList cellHeight={160} cols={5} spacing={6}>
         {data.map(file => {
@@ -249,8 +330,12 @@ const LibraryComponent = props => {
                   {tile.name}</>}
                 // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
                 actionIcon={
-                  <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
-                    <DeleteForeverIcon color="secondary" />
+                  <IconButton
+                    aria-label={`${tile.name} info`}
+                    // onClick={() => handleDelete(tile)}
+                    onClick={() => handleInfoView(tile)}
+                    >
+                    <InfoIcon color="secondary" />
                   </IconButton>
                 }
               />
@@ -372,9 +457,10 @@ const UploadComponent = props => {
 
 const TabPanel = props => {
   const { children, tab, index, ...other } = props
+  const containerRef = createRef()
   if(tab !== index) return null
 
-  return <Box {...other}>{children}</Box>
+  return <Box {...other} style={{height: '100%', padding: '1.5em', marginBottom: '1.5em'}}>{children}</Box>
 }
 
 const TabbedModalContent = props => {
@@ -446,9 +532,7 @@ const TabbedModalContent = props => {
       </AppBar>
       <Box className={classes.modalScroll}>
         <TabPanel tab={tab} index={0} id="library-tab" style={{ position: 'relative' }}>
-          <Box style={{ padding: '1.5em' }}>
-            <LibraryComponent {...libraryProps} />
-          </Box>
+          <LibraryComponent {...libraryProps} />
         </TabPanel>
         <TabPanel tab={tab} index={1}>
           <Box style={{ padding: '1.5em' }}>
