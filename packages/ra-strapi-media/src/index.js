@@ -42,6 +42,8 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ClearIcon from '@material-ui/icons/Clear'
 import InfoIcon from '@material-ui/icons/Info'
+import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos'
+import FormControl from '@material-ui/core/FormControl'
 
 import Image from 'react-graceful-image'
 
@@ -172,8 +174,8 @@ const ImageCropper = props => {
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(blob => {
-        blob.name = image.name
-        dataProvider._strapiUpload(blob, {id: image.id}).then(r => {
+        const file = new File([blob], image.name)
+        dataProvider._strapiUpload(file, {id: image.id}).then(r => {
           if(onChange && r.data.length) onChange(r.data[0])
         })
       })
@@ -198,6 +200,7 @@ const LibraryComponent = props => {
   const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [infoView, setInfoView] = useState(false)
+  const [copyDialog, setCopyDialog] = useState(false)
   const dataProvider = useDataProvider()
 
   const payload = {
@@ -261,6 +264,22 @@ const LibraryComponent = props => {
   if(infoView) {
     return (
       <>
+        {copyDialog && <Dialog
+          open={copyDialog !== false}
+          onClose={() => setCopyDialog(false)}
+          aria-labelledby="draggable-dialog-title"
+          >
+          <DialogContent>
+            <DialogContentText>
+              The cropped image has been saved as a copy.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button autoFocus onClick={() => setCopyDialog(false)} color="primary">
+              OK
+            </Button>
+          </DialogActions>
+        </Dialog>}
         {deleteDialog && <Dialog
           open={deleteDialog !== false}
           onClose={() => setDeleteDialog(false)}
@@ -284,21 +303,46 @@ const LibraryComponent = props => {
           </Button>
           </DialogActions>
         </Dialog>}
-        <Box>
-          <Typography variant="h3">Info box</Typography>
-          <Box display="flex">
-            <Box>
-              <ImageCropper image={infoView} onChange={(newImage) => {
-                setInfoView(fixUploadUrl(newImage))
-                setPagination({ ...pagination, rnd: Math.random() })
-              }} />
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="h4">Media information</Typography>
+            <Button onClick={() => setInfoView(false)} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
+          </Grid>
+          <Grid item md={6}>
+            <ImageCropper image={infoView} onChange={(newImage) => {
+              if (infoView.id != newImage.id) {
+
+              }
+              setInfoView(fixUploadUrl(newImage))
+              setPagination({ ...pagination, rnd: Math.random() })
+            }} />
+          </Grid>
+          <Grid item md={6}>
+            <Box item xs={12} pb={5}>
+              <FormControl fullWidth>
+                <TextField label="Name" value={infoView.name} disabled variant="outlined" />
+              </FormControl>
+              <FormControl fullWidth>
+                <TextField label="URL" value={infoView.url} disabled variant="outlined" />
+              </FormControl>
+              <FormControl fullWidth>
+                <TextField label="MIME" value={infoView.mime} disabled variant="outlined" />
+              </FormControl>
+              <FormControl fullWidth>
+                <TextField label="Size" value={infoView.size} disabled variant="outlined" />
+              </FormControl>
+              <FormControl fullWidth>
+                <TextField label="Created at" value={infoView.created_at} disabled variant="outlined" />
+              </FormControl>
+              <FormControl fullWidth>
+                <TextField label="Updated at" value={infoView.updated_at} disabled variant="outlined" />
+              </FormControl>
             </Box>
-            <Box>
-              <Button onClick={() => handleDelete(infoView)}>Delete</Button>
+            <Box item xs={12}>
+              <Button onClick={() => handleDelete(infoView)} variant="contained" startIcon={<DeleteForeverIcon />}>delete</Button>
             </Box>
-          </Box>
-          
-        </Box>
+          </Grid>
+        </Grid>
       </>
     )
   }
