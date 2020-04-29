@@ -8,9 +8,9 @@ import GridListTile from '@material-ui/core/GridListTile'
 import GridListTileBar from '@material-ui/core/GridListTileBar'
 import IconButton from '@material-ui/core/IconButton'
 import Checkbox from '@material-ui/core/Checkbox'
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever'
+
 import HighlightOffIcon from '@material-ui/icons/HighlightOff'
-import TablePagination from '@material-ui/core/TablePagination'
+
 import Dialog from '@material-ui/core/Dialog'
 import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
@@ -24,7 +24,6 @@ import ListItemText from '@material-ui/core/ListItemText'
 import { fade, makeStyles } from '@material-ui/core/styles'
 import { useGetList, useDataProvider, useInput, useQuery } from 'react-admin'
 import { useDropzone } from 'react-dropzone'
-import { getApiUrl } from '@doldigital/ra-data-strapi3'
 
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
@@ -38,27 +37,21 @@ import TextField from '@material-ui/core/TextField';
 import SearchIcon from '@material-ui/icons/Search';
 import Toolbar from '@material-ui/core/Toolbar';
 import InputBase from '@material-ui/core/InputBase';
-import CircularProgress from '@material-ui/core/CircularProgress'
+
 import InputAdornment from '@material-ui/core/InputAdornment'
 import ClearIcon from '@material-ui/icons/Clear'
-import InfoIcon from '@material-ui/icons/Info'
+
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos'
 import FormControl from '@material-ui/core/FormControl'
 
 import Image from 'react-graceful-image'
 
-import ReactCrop from 'react-image-crop'
-import 'react-image-crop/dist/ReactCrop.css'
 
-const imageMimeTypes = [
-  'image/bmp',
-  'image/gif',
-  'image/jpeg',
-  'image/png',
-  'image/svg+xml',
-  'image/tiff',
-  'image/webp'
-]
+
+import fixUploadUrl from './helpers/fixUploadUrl'
+import LibraryComponent from './Library'
+
+import 'react-image-crop/dist/ReactCrop.css'
 
 const useStyles = makeStyles(theme => ({
   modal: {
@@ -135,300 +128,6 @@ const useStyles = makeStyles(theme => ({
     transform: 'translate(20)'
   }
 }));
-
-const fixUploadUrl = media => {
-  const apiUrl = getApiUrl()
-  return {
-    ...media,
-    url: /(http:|https:)/.test(media.url) ? media.url : `${apiUrl}${media.url}`
-  }
-}
-
-const ImageCropper = props => {
-  const { image, onChange = null } = props
-  console.log('Render ImageCropper image', image)
-  const [crop, setCrop] = useState({})
-  const [cropImage, setCropImage] = useState({})
-  const dataProvider = useDataProvider()
-  
-  const handleCrop = () => {
-    const wratio = cropImage.naturalWidth / cropImage.width
-    const hratio = cropImage.naturalHeight / cropImage.height
-    const rx = Math.floor(crop.x * wratio)
-    const ry = Math.floor(crop.y * hratio)
-    const rw = Math.floor(crop.width * wratio)
-    const rh = Math.floor(crop.height * hratio)
-
-    const canvas = document.createElement('canvas')
-    canvas.width = rw
-    canvas.height = rh
-    const context = canvas.getContext('2d')
-
-    context.drawImage(
-      cropImage,
-      rx, ry,
-      rw, rh,
-      0, 0,
-      rw, rh
-    )
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        const file = new File([blob], image.name)
-        dataProvider._strapiUpload(file, {id: image.id}).then(r => {
-          if(onChange && r.data.length) onChange(r.data[0])
-        })
-      })
-    })
-  }
-  return (
-    <>
-      <ReactCrop
-        src={image.url}
-        crop={crop}
-        onChange={newCrop => setCrop(newCrop)}
-        onImageLoaded={image => setCropImage(image)}
-        crossorigin="anonymous"
-      />
-      <Button onClick={handleCrop}>CROP</Button>
-    </>
-  )
-}
-
-const LibraryComponent = props => {
-  const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
-  const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
-  const [deleteDialog, setDeleteDialog] = useState(false)
-  const [infoView, setInfoView] = useState(false)
-  const [copyDialog, setCopyDialog] = useState(false)
-  const dataProvider = useDataProvider()
-
-  const payload = {
-    pagination,
-    sort
-  }
-
-  const { search = '', selected = [], onCheck = null, allowedTypes = null } = props
-  const filter = {}
-
-  if(allowedTypes) {
-    if(allowedTypes === 'images') {
-      filter.mime = imageMimeTypes
-    }
-    else if(allowedTypes === 'no-images') {
-      filter.mime_nin = imageMimeTypes
-    }
-    else if(Array.isArray(allowedTypes)) {
-      filter.mime = allowedTypes
-    }
-  }
-
-  if(search !== '') {
-    if(isNaN(search)) filter.name = search
-    else filter.name_contains = search
-  }
-
-  if(Object.keys(filter).length) {
-    payload['filter'] = filter
-  }
-
-  const { data, total, loading, error } = useQuery({
-    type: 'getList',
-    resource: 'upload/files',
-    payload
-  })
-
-  const handleCheck = tile => event => {
-    const { target: { checked } } = event
-    if(onCheck) onCheck(tile, checked)
-  }
-
-  const handleDelete = media => {
-    setDeleteDialog(media)
-  }
-
-  const handleInfoView = media => setInfoView(media)
-
-  const proceedWithDelete = media => {
-    dataProvider.delete('upload/files', { id: media.id }).then(r => {
-      if(onCheck) onCheck(media, false)
-      setDeleteDialog(false)
-      setInfoView(false)
-      setPagination({...pagination, page: 1, rnd: Math.random()})
-    })
-  }
-
-  if (loading) return <Typography variant="h2"><CircularProgress /></Typography>
-  if(error) return <Typography variant="h5">an error occurred.</Typography>
-
-  if(infoView) {
-    return (
-      <>
-        {copyDialog && <Dialog
-          open={copyDialog !== false}
-          onClose={() => setCopyDialog(false)}
-          aria-labelledby="draggable-dialog-title"
-          >
-          <DialogContent>
-            <DialogContentText>
-              The cropped image has been saved as a copy.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button autoFocus onClick={() => setCopyDialog(false)} color="primary">
-              OK
-            </Button>
-          </DialogActions>
-        </Dialog>}
-        {deleteDialog && <Dialog
-          open={deleteDialog !== false}
-          onClose={() => setDeleteDialog(false)}
-          aria-labelledby="draggable-dialog-title"
-        >
-          <DialogTitle id="draggable-dialog-title">
-            Delete media
-        </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you shure you want to delete "{deleteDialog.name}"?<br />
-            The action is irreversible.
-          </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button autoFocus onClick={() => setDeleteDialog(false)} color="primary">
-              Cancel
-          </Button>
-            <Button onClick={() => proceedWithDelete(deleteDialog)} color="primary">
-              CONFIRM DELETION
-          </Button>
-          </DialogActions>
-        </Dialog>}
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Typography variant="h4">Media information</Typography>
-            <Button onClick={() => setInfoView(false)} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
-          </Grid>
-          <Grid item md={6}>
-            <ImageCropper image={infoView} onChange={(newImage) => {
-              if (infoView.id != newImage.id) {
-
-              }
-              setInfoView(fixUploadUrl(newImage))
-              setPagination({ ...pagination, rnd: Math.random() })
-            }} />
-          </Grid>
-          <Grid item md={6}>
-            <Box item xs={12} pb={5}>
-              <FormControl fullWidth>
-                <TextField label="Name" value={infoView.name} disabled variant="outlined" />
-              </FormControl>
-              <FormControl fullWidth>
-                <TextField label="URL" value={infoView.url} disabled variant="outlined" />
-              </FormControl>
-              <FormControl fullWidth>
-                <TextField label="MIME" value={infoView.mime} disabled variant="outlined" />
-              </FormControl>
-              <FormControl fullWidth>
-                <TextField label="Size" value={infoView.size} disabled variant="outlined" />
-              </FormControl>
-              <FormControl fullWidth>
-                <TextField label="Created at" value={infoView.created_at} disabled variant="outlined" />
-              </FormControl>
-              <FormControl fullWidth>
-                <TextField label="Updated at" value={infoView.updated_at} disabled variant="outlined" />
-              </FormControl>
-            </Box>
-            <Box item xs={12}>
-              <Button onClick={() => handleDelete(infoView)} variant="contained" startIcon={<DeleteForeverIcon />}>delete</Button>
-            </Box>
-          </Grid>
-        </Grid>
-      </>
-    )
-  }
-
-  return (
-    <>
-      {search !== '' && <Box><Typography variant="h6">Risultati per "{search}"</Typography></Box>}
-      {data.length > 0 && <GridList cellHeight={160} cols={5} spacing={6}>
-        {data.map(file => {
-          const tile = fixUploadUrl(file)
-          return (
-            <GridListTile key={tile.id} cols={tile.cols || 1}>
-              {/image(.*)/.exec(tile.mime) ? <Image
-                src={tile.url}
-                alt={tile.name}
-                width="100%"
-                />
-                :
-                <DescriptionIcon />
-              }
-              <GridListTileBar
-                title={<>
-                  <Checkbox
-                    checked={selected.filter(item => item.id === tile.id).length === 1}
-                    //onChange={() => onSelect(tile)}
-                    onChange={handleCheck(tile)}
-                    color="primary"
-                  />
-                  {tile.name}</>}
-                // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
-                actionIcon={
-                  <IconButton
-                    aria-label={`${tile.name} info`}
-                    // onClick={() => handleDelete(tile)}
-                    onClick={() => handleInfoView(tile)}
-                    >
-                    <InfoIcon color="secondary" />
-                  </IconButton>
-                }
-              />
-            </GridListTile>
-          )
-        })}
-      </GridList>}
-      {data.length === 0 && <Box><Typography variant="h4">Nessun risultato trovato</Typography></Box>}
-      {(data.length > 0 && total) && <TablePagination
-        rowsPerPageOptions={[10]}
-        component="div"
-        count={total}
-        rowsPerPage={pagination.perPage}
-        page={pagination.page - 1 || 0}
-        onChangePage={(event, newPage) => setPagination({ ...pagination, page: newPage + 1 })}
-      />}
-      <Typography variant="h6">Selected media</Typography>
-      <Box bgcolor="#eee" style={{ marginBottom: '1em', borderBottom: '2px solid #ccc', paddingBottom: '0.5em' }}>
-        <GridList cellHeight={160} cols={5} spacing={6}>
-          {selected.map(tile => {
-            return (
-              <GridListTile key={tile.id} cols={tile.cols || 1}>
-                {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
-                  :
-                  <DescriptionIcon />
-                }
-                <GridListTileBar
-                  title={<>
-                    <Checkbox
-                      checked={true}
-                      onChange={handleCheck(tile)}
-                      color="primary"
-                    />
-                    {tile.name}</>}
-                // subtitle={<span>type: {tile.mime}, size: {tile.size} KB</span>}
-                actionIcon={
-                  <IconButton aria-label={`delete ${tile.name}`} onClick={() => handleDelete(tile)}>
-                    <DeleteForeverIcon color="secondary" />
-                  </IconButton>
-                }
-                />
-              </GridListTile>
-            )
-          })}
-        </GridList>
-      </Box>
-    </>
-  )
-}
 
 const UploadComponent = props => {
   const {
