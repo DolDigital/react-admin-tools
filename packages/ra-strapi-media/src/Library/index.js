@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { useQuery } from 'react-admin'
 import Image from 'react-graceful-image'
-
 
 import Box from '@material-ui/core/Box'
 import Checkbox from '@material-ui/core/Checkbox'
@@ -17,7 +17,6 @@ import TablePagination from '@material-ui/core/TablePagination'
 import Typography from '@material-ui/core/Typography'
 
 import fixUploadUrl from '../helpers/fixUploadUrl'
-
 import InfoBoxComponent from './InfoBoxComponent'
 
 const imageMimeTypes = [
@@ -31,17 +30,25 @@ const imageMimeTypes = [
 ]
 
 const LibraryComponent = props => {
-  const [pagination, setPagination] = useState((({ page = 1, perPage = 10 }) => ({ page, perPage }))(props))
-  const [sort, setSort] = useState((({ field = 'created_at', order = 'DESC' }) => ({ field, order }))(props))
+  const {
+    search = '',
+    selected = [],
+    onCheck = null,
+    allowedTypes = null,
+    page = 1,
+    perPage = 10,
+    field = 'created_at',
+    order = 'DESC'
+  } = props
+  const [pagination, setPagination] = useState({ page, perPage })
+  const [sort, setSort] = useState({ field, order })
   const [infoView, setInfoView] = useState(false)
   
-
   const payload = {
     pagination,
     sort
   }
 
-  const { search = '', selected = [], onCheck = null, allowedTypes = null } = props
   const filter = {}
 
   if (allowedTypes) {
@@ -180,6 +187,31 @@ const LibraryComponent = props => {
       </Box>
     </>
   )
+}
+
+LibraryComponent.propTypes = {
+  selected: PropTypes.array,
+  search: PropTypes.string ,
+  onCheck: PropTypes.func,
+  allowedTypes: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string)
+  ]),
+  page: PropTypes.number,
+  perPage: PropTypes.number,
+  field: PropTypes.string,
+  order: PropTypes.oneOf(['ASC', 'DESC'])
+}
+
+LibraryComponent.defaultProps = {
+  selected: [],
+  search: '',
+  onCheck: null,
+  allowedTypes: null,
+  page: 1,
+  perPage: 10,
+  field: 'created_at',
+  order: 'DESC'
 }
 
 export default LibraryComponent

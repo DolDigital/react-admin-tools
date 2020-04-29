@@ -4,6 +4,8 @@ import ReactCrop from 'react-image-crop'
 
 import Button from '@material-ui/core/Button'
 
+import 'react-image-crop/dist/ReactCrop.css'
+
 const ImageCropper = props => {
   const { image, onChange = null } = props
   const [crop, setCrop] = useState({})

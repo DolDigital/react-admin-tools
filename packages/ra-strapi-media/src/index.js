@@ -23,7 +23,6 @@ import DescriptionIcon from '@material-ui/icons/Description'
 import ListItemText from '@material-ui/core/ListItemText'
 import { fade, makeStyles } from '@material-ui/core/styles'
 import { useGetList, useDataProvider, useInput, useQuery } from 'react-admin'
-import { useDropzone } from 'react-dropzone'
 
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
@@ -50,8 +49,7 @@ import Image from 'react-graceful-image'
 
 import fixUploadUrl from './helpers/fixUploadUrl'
 import LibraryComponent from './Library'
-
-import 'react-image-crop/dist/ReactCrop.css'
+import UploadComponent from './Upload'
 
 const useStyles = makeStyles(theme => ({
   modal: {
@@ -128,74 +126,6 @@ const useStyles = makeStyles(theme => ({
     transform: 'translate(20)'
   }
 }));
-
-const UploadComponent = props => {
-  const {
-    options: { inputProps: inputPropsOptions, ...options } = {},
-    accept,
-    maxSize,
-    minSize,
-    multiple,
-    input,
-    closeMediaLibrary
-  } = props
-
-  const dataProvider = useDataProvider()
-  const [uploaded, setUploaded] = useState([])
-
-  const onDrop = (newFiles, rejectedFiles, event) => {
-    dataProvider._strapiUpload(newFiles).then(r => {
-      setUploaded([...uploaded, ...r.data])
-    })
-  }
-
-  const { getRootProps, getInputProps } = useDropzone({
-    ...options,
-    accept,
-    maxSize,
-    minSize,
-    multiple,
-    onDrop,
-  })
-
-
-  return (
-    <>
-      <GridList cellHeight={160} cols={5} spacing={6} style={{margin: '2.2em 0 2em 0'}}>
-        {uploaded.map(file => {
-          const tile = fixUploadUrl(file)
-          return (
-            <GridListTile key={tile.id} cols={tile.cols || 1}>
-              {/image(.*)/.exec(tile.mime) ? <Image
-                src={tile.url}
-                alt={tile.name}
-                width="100%"
-              />
-                :
-                <DescriptionIcon />
-              }
-              <GridListTileBar
-                title={tile.name}
-                />
-            </GridListTile>
-          )
-        })}
-      </GridList>
-      <div
-        data-testid="dropzone"
-        style={{ border: '3px dashed #ccc', padding: '2em', textAlign: 'center' }}
-        {...getRootProps()}
-      >
-        <input
-          {...getInputProps({
-            ...inputPropsOptions,
-          })}
-        />
-        Upload new files by clicking or dropping here.
-    </div>
-    </>
-  )
-}
 
 
 const TabPanel = props => {
