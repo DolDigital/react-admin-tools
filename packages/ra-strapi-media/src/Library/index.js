@@ -38,7 +38,8 @@ const LibraryComponent = props => {
     page = 1,
     perPage = 10,
     field = 'created_at',
-    order = 'DESC'
+    order = 'DESC',
+    gridProps
   } = props
   const [pagination, setPagination] = useState({ page, perPage })
   const [sort, setSort] = useState({ field, order })
@@ -110,7 +111,7 @@ const LibraryComponent = props => {
   return (
     <>
       {search !== '' && <Box><Typography variant="h6">Risultati per "{search}"</Typography></Box>}
-      {data.length > 0 && <GridList cellHeight={160} cols={5} spacing={6}>
+      {data.length > 0 && <GridList cellHeight={160} {...gridProps}>
         {data.map(file => {
           const tile = fixUploadUrl(file)
           return (
@@ -158,7 +159,7 @@ const LibraryComponent = props => {
       />}
       <Typography variant="h6">Selected media</Typography>
       <Box bgcolor="#eee" style={{ marginBottom: '1em', borderBottom: '2px solid #ccc', paddingBottom: '0.5em' }}>
-        <GridList cellHeight={160} cols={5} spacing={6}>
+        <GridList cellHeight={160} {...gridProps}>
           {selected.map(tile => {
             return (
               <GridListTile key={tile.id} cols={tile.cols || 1}>
@@ -200,7 +201,8 @@ LibraryComponent.propTypes = {
   page: PropTypes.number,
   perPage: PropTypes.number,
   field: PropTypes.string,
-  order: PropTypes.oneOf(['ASC', 'DESC'])
+  order: PropTypes.oneOf(['ASC', 'DESC']),
+  gridProps: PropTypes.object
 }
 
 LibraryComponent.defaultProps = {
@@ -211,7 +213,11 @@ LibraryComponent.defaultProps = {
   page: 1,
   perPage: 10,
   field: 'created_at',
-  order: 'DESC'
+  order: 'DESC',
+  gridProps: {
+    cols: 5,
+    spacing: 6
+  }
 }
 
 export default LibraryComponent

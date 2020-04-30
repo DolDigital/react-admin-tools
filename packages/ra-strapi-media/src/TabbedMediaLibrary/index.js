@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 
-import { fade, makeStyles } from '@material-ui/core/styles'
+import { fade, makeStyles, useTheme } from '@material-ui/core/styles'
+import useMediaQuery from '@material-ui/core/useMediaQuery'
 import AppBar from '@material-ui/core/AppBar'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
@@ -64,20 +65,35 @@ const useStyles = makeStyles(theme => ({
       },
     },
   },
-  modalScroll: {
+  modalScrollWrapper: {
+    height: `calc(100% - ${theme.spacing(5)}px - 56px)`,
+    marginTop: '56px',
+    [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: {
+      height: `calc(100% - ${theme.spacing(5)}px - 48px)`,
+      marginTop: '48px',
+    },
+    [theme.breakpoints.up('sm')]: {
+      height: `calc(100% - ${theme.spacing(5)}px - 64px)`,
+      marginTop: '64px',
+    }, 
+    padding: `${theme.spacing(2,3,3,3)} !important`,
     overflow: 'scroll',
-    height: '100%',
-    paddingTop: '3.7em !important',
-    paddingBottom: '4.2em !important'
-    // height: '70vh'
+    display: 'flex'
+  },
+  tabPanel: {
+    flexGrow: 1
+  },
+  uploadTab: {
+    
   }
 }));
 
 const TabPanel = props => {
   const { children, tab, index, ...other } = props
   if (tab !== index) return null
+  const classes = useStyles()
 
-  return <Box {...other} style={{ height: '100%', padding: '1.5em', marginBottom: '1.5em' }}>{children}</Box>
+  return <Box {...other} className={classes.tabPanel}>{children}</Box>
 }
 
 TabPanel.propTypes = {
@@ -87,6 +103,8 @@ TabPanel.propTypes = {
 
 const TabbedMediaLibrary = props => {
   const classes = useStyles()
+  const theme = useTheme()
+  const isSmallDevice = useMediaQuery(theme.breakpoints.down('md'));
 
   const { onClose, input, multiple, allowedTypes } = props
 
@@ -119,7 +137,10 @@ const TabbedMediaLibrary = props => {
     selected,
     onCheck,
     search,
-    allowedTypes
+    allowedTypes,
+    gridProps: {
+      cols: isSmallDevice ? 2 : 5
+    }
   }
 
   return (
@@ -156,16 +177,16 @@ const TabbedMediaLibrary = props => {
           <Button variant="contained" color="primary" onClick={handleClose}>Close</Button>
         </Toolbar>
       </AppBar>
-      <Box className={classes.modalScroll}>
-        <TabPanel tab={tab} index={0} id="library-tab" style={{ position: 'relative' }}>
-          <LibraryComponent {...libraryProps} />
-        </TabPanel>
-        <TabPanel tab={tab} index={1}>
-          <Box style={{ padding: '1.5em' }}>
-            <Typography variant="h2">Upload</Typography>
-            <UploadComponent />
-          </Box>
-        </TabPanel>
+      <Box className={classes.modalScrollWrapper}>
+          <TabPanel tab={tab} index={0}>
+            <LibraryComponent {...libraryProps} />
+          </TabPanel>
+          <TabPanel tab={tab} index={1}>
+            <Box className={classes.uploadTab}>
+              <Typography variant="h2">Upload</Typography>
+              <UploadComponent />
+            </Box>
+          </TabPanel>
       </Box>
     </>
   )

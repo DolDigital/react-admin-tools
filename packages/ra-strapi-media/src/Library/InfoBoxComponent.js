@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { useDataProvider } from 'react-admin'
 
+import { makeStyles } from '@material-ui/core/styles'
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
@@ -15,12 +16,62 @@ import ImageCropper from './ImageCropper'
 import DeleteDialog from './DeleteDialog'
 import CopyDialog from './CopyDialog'
 
+const useStyles = makeStyles(theme => ({
+  formControlWrapper: {
+    padding: `${theme.spacing(1, 2, 3, 2)} !important`
+  },
+  viewWrapper: {
+    // backgroundColor: 'green',
+    width: '100%',
+    height: '100%'
+  },
+  headerBox: {
+    paddingBottom: `${theme.spacing(2)}px !important`
+  },
+  contentBox: {
+    flexGrow: 1
+  },
+  previewBox: {
+    flexGrow: 1,
+    //paddingRight: `${theme.spacing(2)}px !important`,
+    flex: '50%',
+    [theme.breakpoints.down('sm')]: {
+      flex: '100%'
+    }
+  },
+  detailBox: {
+    flexGrow: 1,
+    //paddingLeft: `${theme.spacing(2)}px !important`,
+    overflow: 'scroll',
+    flex: '50%',
+    [theme.breakpoints.down('sm')]: {
+      flex: '100%'
+    }
+  },
+  reactCrop: {
+    height: '50vh',
+    border: '1px solid #ccc'
+  },
+  cropWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    backgroundColor: '#eee'
+  },
+  actionsWrapper: {
+    paddingTop: `${theme.spacing(2)}px !important`,
+    display: 'flex',
+    justifyContent: 'flex-end'
+  }
+}))
+
 const InfoBoxComponent = props => {
   const { item = false, onClose = null, onCrop = null, onDelete = null } = props
   const isOpen = item && typeof item === 'object'
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [copyDialog, setCopyDialog] = useState(false)
   const dataProvider = useDataProvider()
+
+  const classes = useStyles()
 
   if (!isOpen) return null
 
@@ -51,7 +102,87 @@ const InfoBoxComponent = props => {
         onCancel={() => setDeleteDialog(false)}
         onConfirm={() => handleDelete(deleteDialog)}
       />
-      <Grid container spacing={3}>
+
+      <Box display="flex" flexDirection="column" className={classes.viewWrapper}>
+        <Box className={classes.headerBox}>
+          <Typography variant="h4">Media information</Typography>
+          <Button onClick={handleClose} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
+        </Box>
+        <Box display="flex" flexDirection="row" flexWrap="wrap" className={classes.contentBox} >
+          <Box className={classes.previewBox}>
+            <ImageCropper
+              image={item}
+              onChange={handleCrop}
+              className={classes.reactCrop}
+              imageStyle={{ height: '50vh', width: 'auto' }}
+              wrapperProps={{
+                className: classes.cropWrapper
+              }}
+              actionProps={{
+                className: classes.actionsWrapper
+              }}
+              cropButtonProps={{
+                variant: 'contained',
+                color: 'primary'
+              }}
+              />
+          </Box>
+          <Box className={classes.detailBox}>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Title" variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Alternative text" variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Caption" variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Tags" variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Name" value={item.name} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="URL" value={item.url} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="MIME" value={item.mime} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Size" value={item.size} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Created at" value={item.created_at} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <FormControl fullWidth>
+                <TextField label="Updated at" value={item.updated_at} disabled variant="outlined" />
+              </FormControl>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* <Grid container spacing={3}>
         <Grid item xs={12}>
           <Typography variant="h4">Media information</Typography>
           <Button onClick={handleClose} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
@@ -60,23 +191,23 @@ const InfoBoxComponent = props => {
           <ImageCropper image={item} onChange={handleCrop} />
         </Grid>
         <Grid item md={6}>
-          <Box xs={12} pb={5}>
-            <FormControl fullWidth>
+          <Box xs={12}>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="Name" value={item.name} disabled variant="outlined" />
             </FormControl>
-            <FormControl fullWidth>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="URL" value={item.url} disabled variant="outlined" />
             </FormControl>
-            <FormControl fullWidth>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="MIME" value={item.mime} disabled variant="outlined" />
             </FormControl>
-            <FormControl fullWidth>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="Size" value={item.size} disabled variant="outlined" />
             </FormControl>
-            <FormControl fullWidth>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="Created at" value={item.created_at} disabled variant="outlined" />
             </FormControl>
-            <FormControl fullWidth>
+            <FormControl fullWidth className={classes.formControl}>
               <TextField label="Updated at" value={item.updated_at} disabled variant="outlined" />
             </FormControl>
           </Box>
@@ -84,7 +215,7 @@ const InfoBoxComponent = props => {
             <Button onClick={() => setDeleteDialog(item)} variant="contained" startIcon={<DeleteForeverIcon />}>delete</Button>
           </Box>
         </Grid>
-      </Grid>
+      </Grid> */}
     </>
   )
 }
