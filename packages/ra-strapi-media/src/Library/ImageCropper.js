@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { useDataProvider } from 'react-admin'
 import ReactCrop from 'react-image-crop'
 
@@ -54,6 +55,15 @@ const ImageCropper = props => {
       <Button onClick={handleCrop}>CROP</Button>
     </>
   )
+}
+
+ImageCropper.propTypes = {
+  image: PropTypes.object.isRequired,
+  onChange: PropTypes.func
+}
+
+ImageCropper.defaultProps = {
+  onChange: null
 }
 
 export default ImageCropper

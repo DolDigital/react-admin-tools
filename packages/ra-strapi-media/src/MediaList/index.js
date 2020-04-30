@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import Image from 'react-graceful-image'
 
 import GridList from '@material-ui/core/GridList'
@@ -8,7 +9,7 @@ import GridListTileBar from '@material-ui/core/GridListTileBar'
 import fixUploadUrl from '../helpers/fixUploadUrl'
 
 const MediaList = props => {
-  const { media = [], ...otherProps } = props
+  const { media, ...otherProps } = props
   const items = (Array.isArray(media) ? media : [media]).filter(i => typeof i.id !== 'undefined')
 
   if (media === false) return null
@@ -37,6 +38,13 @@ const MediaList = props => {
       }
     </GridList>
   )
+}
+
+MediaList.propTypes = {
+  media: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.arrayOf(PropTypes.object)
+  ]).isRequired
 }
 
 export default MediaList

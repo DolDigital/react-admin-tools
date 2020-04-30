@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { useDataProvider } from 'react-admin'
 import { useDropzone } from 'react-dropzone'
 import Image from 'react-graceful-image'
@@ -75,4 +76,13 @@ const UploadComponent = props => {
     </>
   )
 }
+
+UploadComponent.propTypes = {
+  options: PropTypes.object,
+  accept: PropTypes.arrayOf(PropTypes.string),
+  maxSize: PropTypes.number,
+  minSize: PropTypes.number,
+  multiple: PropTypes.bool
+}
+
 export default UploadComponent

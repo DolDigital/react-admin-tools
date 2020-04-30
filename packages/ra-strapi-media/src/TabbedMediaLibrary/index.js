@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 
 import { fade, makeStyles } from '@material-ui/core/styles'
 import AppBar from '@material-ui/core/AppBar'
@@ -79,10 +80,15 @@ const TabPanel = props => {
   return <Box {...other} style={{ height: '100%', padding: '1.5em', marginBottom: '1.5em' }}>{children}</Box>
 }
 
+TabPanel.propTypes = {
+  tab: PropTypes.number,
+  index: PropTypes.number.isRequired
+}
+
 const TabbedMediaLibrary = props => {
   const classes = useStyles()
 
-  const { onClose, input, multiple = false, allowedTypes = null } = props
+  const { onClose, input, multiple, allowedTypes } = props
 
   const _selected = (input.value !== false ? (Array.isArray(input.value) ? input.value : [input.value]) : [])
     .filter(f => typeof f.id !== 'undefined')
@@ -101,6 +107,10 @@ const TabbedMediaLibrary = props => {
     } else {
       setSelected(currentlySelected.filter(t => t.id !== file.id))
     }
+  }
+
+  const handleClose = () => {
+    if(onClose) onClose()
   }
 
   useEffect(() => input.onChange(selected.length === 0 ? false : selected.length === 1 ? selected[0] : selected), [selected])
@@ -143,7 +153,7 @@ const TabbedMediaLibrary = props => {
               </Box>}
             </Box>
           </Box>
-          <Button variant="contained" color="primary" onClick={() => onClose()}>Close</Button>
+          <Button variant="contained" color="primary" onClick={handleClose}>Close</Button>
         </Toolbar>
       </AppBar>
       <Box className={classes.modalScroll}>
@@ -159,6 +169,23 @@ const TabbedMediaLibrary = props => {
       </Box>
     </>
   )
+}
+
+TabbedMediaLibrary.propTypes = {
+  onClose: PropTypes.func,
+  input: PropTypes.object,
+  multiple: PropTypes.bool,
+  allowedTypes: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string)
+  ])
+}
+
+TabbedMediaLibrary.defaultProps = {
+  onClose: null,
+  input: null,
+  multiple: false,
+  allowedTypes: null
 }
 
 export default TabbedMediaLibrary

@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 import Button from '@material-ui/core/Button'
 import Dialog from '@material-ui/core/Dialog'
@@ -10,7 +11,7 @@ import DialogTitle from '@material-ui/core/DialogTitle'
 
 const DeleteDialog = props => {
   const { item = false, onClose = null, onCancel = null, onConfirm = null } = props
-  const isOpen = item !== false
+  const isOpen = item && typeof item === 'object'
 
   const handleClose = () => {
     if (onClose) onClose()
@@ -51,6 +52,23 @@ const DeleteDialog = props => {
       </DialogActions>
     </Dialog>
   )
+}
+
+DeleteDialog.propTypes = {
+  item: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.bool
+  ]),
+  onClose: PropTypes.func,
+  onCancel: PropTypes.func,
+  onConfirm: PropTypes.func
+}
+
+DeleteDialog.defaultProps = {
+  item: false,
+  onClose: null,
+  onCancel: null,
+  onConfirm: null
 }
 
 export default DeleteDialog

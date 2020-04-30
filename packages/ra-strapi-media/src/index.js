@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { useInput } from 'react-admin'
 
 import { makeStyles } from '@material-ui/core/styles'
@@ -38,11 +39,11 @@ const useStyles = makeStyles(theme => ({
 
 const StrapiMediaModal = props => {
   const {
-    isOpen = false,
-    input = null,
-    multiple = false,
-    allowedTypes = null,
-    onClose = null
+    isOpen,
+    input,
+    multiple,
+    allowedTypes,
+    onClose
   } = props
 
   if(!isOpen) return null
@@ -72,13 +73,32 @@ const StrapiMediaModal = props => {
   )
 }
 
+StrapiMediaModal.propTypes = {
+  isOpen: PropTypes.bool,
+  input: PropTypes.object,
+  multiple: PropTypes.bool,
+  allowedTypes: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.string),
+    PropTypes.string
+  ]),
+  onClose: PropTypes.func
+}
+
+StrapiMediaModal.defaultProps = {
+  isOpen: false,
+  input: null,
+  multiple: false,
+  allowedTypes: null,
+  onClose: null
+}
+
 const StrapiMediaInput = props => {
   const {
-    multiple = false, 
-    listProps = {},
-    allowedTypes = null,
-    basePath = null,
-    gridCols = 4.5,
+    multiple,
+    listProps,
+    allowedTypes,
+    basePath,
+    gridCols,
     ...otherProps
   } = props
   const { label = otherProps.source } = otherProps
@@ -106,6 +126,25 @@ const StrapiMediaInput = props => {
       </Box>
     </>
   )
+}
+
+StrapiMediaInput.propTypes = {
+  multiple: PropTypes.bool,
+  listProps: PropTypes.object,
+  allowedTypes: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.arrayOf(PropTypes.string)
+  ]),
+  basePath: PropTypes.string,
+  gridCols: PropTypes.number
+}
+
+StrapiMediaInput.defaultProps = {
+  multiple: false,
+  listProps: {},
+  allowedTypes: null,
+  basePath: null,
+  gridCols: 4.5
 }
 
 export default StrapiMediaInput

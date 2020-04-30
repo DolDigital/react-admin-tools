@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PropTypes from 'prop-types'
 import { useDataProvider } from 'react-admin'
 
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos'
@@ -16,7 +17,7 @@ import CopyDialog from './CopyDialog'
 
 const InfoBoxComponent = props => {
   const { item = false, onClose = null, onCrop = null, onDelete = null } = props
-  const isOpen = item !== false
+  const isOpen = item && typeof item === 'object'
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [copyDialog, setCopyDialog] = useState(false)
   const dataProvider = useDataProvider()
@@ -86,6 +87,22 @@ const InfoBoxComponent = props => {
       </Grid>
     </>
   )
+}
+
+InfoBoxComponent.propTypes = {
+  item: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.bool
+  ]).isRequired,
+  onClose: PropTypes.func,
+  onCrop: PropTypes.func,
+  onDelete: PropTypes.func
+}
+
+InfoBoxComponent.defaultProps = {
+  onClose: null,
+  onCrop: null,
+  onDelete: null
 }
 
 export default InfoBoxComponent
