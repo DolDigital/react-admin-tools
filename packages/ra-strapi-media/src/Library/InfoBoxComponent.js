@@ -9,6 +9,7 @@ import Button from '@material-ui/core/Button'
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever'
 import FormControl from '@material-ui/core/FormControl'
 import Grid from '@material-ui/core/Grid'
+import SaveIcon from '@material-ui/icons/Save'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 
@@ -18,7 +19,7 @@ import CopyDialog from './CopyDialog'
 
 const useStyles = makeStyles(theme => ({
   formControlWrapper: {
-    padding: `${theme.spacing(1, 2, 3, 2)} !important`
+    padding: `${theme.spacing(1, 2, 1, 2)} !important`
   },
   viewWrapper: {
     // backgroundColor: 'green',
@@ -49,8 +50,9 @@ const useStyles = makeStyles(theme => ({
     }
   },
   reactCrop: {
-    height: '50vh',
-    border: '1px solid #ccc'
+    maxHeight: '50vh',
+    border: '1px solid #ccc',
+    display: 'inline-table'
   },
   cropWrapper: {
     display: 'flex',
@@ -58,9 +60,14 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: '#eee'
   },
   actionsWrapper: {
-    paddingTop: `${theme.spacing(2)}px !important`,
+    padding: `${theme.spacing(2, 3, 2, 3)} !important`,
     display: 'flex',
-    justifyContent: 'flex-end'
+    justifyContent: 'center',
+    backgroundColor: '#eee'
+  },
+  deleteButton: {
+    color: theme.palette.error.main,
+    marginRight: `${theme.spacing(2)}px !important`
   }
 }))
 
@@ -104,9 +111,15 @@ const InfoBoxComponent = props => {
       />
 
       <Box display="flex" flexDirection="column" className={classes.viewWrapper}>
-        <Box className={classes.headerBox}>
-          <Typography variant="h4">Media information</Typography>
-          <Button onClick={handleClose} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
+        <Box className={classes.headerBox} display="flex" flexDirection="row">
+          {/* <Typography variant="h4">Media information</Typography> */}
+          <Box flexGrow={1}>
+            <Button onClick={handleClose} startIcon={<ArrowBackIosIcon />} variant="outlined">back</Button>
+          </Box>
+          <Box flexGrow={1} justifyContent="flex-end" display="flex">
+            <Button onClick={() => setDeleteDialog(item)} className={classes.deleteButton} startIcon={<DeleteForeverIcon />}>delete</Button>
+            <Button onClick={handleClose} variant="contained" color="primary" startIcon={<SaveIcon />}>save</Button>
+          </Box>
         </Box>
         <Box display="flex" flexDirection="row" flexWrap="wrap" className={classes.contentBox} >
           <Box className={classes.previewBox}>
@@ -114,7 +127,10 @@ const InfoBoxComponent = props => {
               image={item}
               onChange={handleCrop}
               className={classes.reactCrop}
-              imageStyle={{ height: '50vh', width: 'auto' }}
+              imageStyle={{
+                maxHeight: '50vh',
+                width: 'auto'
+              }}
               wrapperProps={{
                 className: classes.cropWrapper
               }}

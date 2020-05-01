@@ -94,9 +94,7 @@ const LibraryComponent = props => {
       item={infoView}
       onClose={() => setInfoView(false)}
       onCrop={media => {
-        if (infoView.id != media.id) {
-
-        }
+        console.log('on crop', media)
         setInfoView(fixUploadUrl(media))
         setPagination({ ...pagination, rnd: Math.random() })
       }}

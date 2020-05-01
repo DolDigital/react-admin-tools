@@ -94,13 +94,15 @@ export const buildDataProvider = (apiUrl, httpClient = _httpClient) => {
   return {
     _strapiUpload: (files, data = null) => {
       let formData = new FormData();
+      let fetchUrl = `${apiUrl}/upload`
       const _data = Array.isArray(files) ? null : data
       const _files = Array.isArray(files) ? files : [files]
       _files.forEach(file => formData.append('files', file))
       if(_data) {
         Object.keys(_data).forEach(key => formData.append(key, _data[key]))
+        if(_data.id) fetchUrl = `${fetchUrl}?id=${_data.id}`
       }
-      return fetch(`${apiUrl}/upload`, {
+      return fetch(fetchUrl, {
         method: 'POST',
         body: formData
       }).then(
