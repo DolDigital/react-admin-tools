@@ -76,6 +76,11 @@ const InfoBoxComponent = props => {
   const isOpen = item && typeof item === 'object'
   const [deleteDialog, setDeleteDialog] = useState(false)
   const [copyDialog, setCopyDialog] = useState(false)
+  const [mediaInfo, setMediaInfo] = useState({
+    name: item.name || '',
+    alt: item.alternativeText || '',
+    caption: item.caption || ''
+  })
   const dataProvider = useDataProvider()
 
   const classes = useStyles()
@@ -94,6 +99,14 @@ const InfoBoxComponent = props => {
     dataProvider.delete('upload/files', { id: media.id }).then(r => {
       setDeleteDialog(false)
       if (onDelete) onDelete(media)
+    })
+  }
+
+  const handleInfoUpdate = field => ({ target }) => setMediaInfo({ ...mediaInfo, [field]: target.value })
+
+  const handleSave = () => {
+    dataProvider._strapiUpload(null, { id: item.id, fileInfo: JSON.stringify({ caption: mediaInfo.caption, alternativeText: mediaInfo.alt, name: mediaInfo.name }) }).then(r => {
+      console.log(r)
     })
   }
 
@@ -118,7 +131,7 @@ const InfoBoxComponent = props => {
           </Box>
           <Box flexGrow={1} justifyContent="flex-end" display="flex">
             <Button onClick={() => setDeleteDialog(item)} className={classes.deleteButton} startIcon={<DeleteForeverIcon />}>delete</Button>
-            <Button onClick={handleClose} variant="contained" color="primary" startIcon={<SaveIcon />}>save</Button>
+            <Button onClick={handleSave} variant="contained" color="primary" startIcon={<SaveIcon />}>save</Button>
           </Box>
         </Box>
         <Box display="flex" flexDirection="row" flexWrap="wrap" className={classes.contentBox} >
@@ -146,27 +159,17 @@ const InfoBoxComponent = props => {
           <Box className={classes.detailBox}>
             <Box className={classes.formControlWrapper}>
               <FormControl fullWidth>
-                <TextField label="Title" variant="outlined" />
+                <TextField label="Name" value={mediaInfo.name} onChange={handleInfoUpdate('name')} variant="outlined" />
               </FormControl>
             </Box>
             <Box className={classes.formControlWrapper}>
               <FormControl fullWidth>
-                <TextField label="Alternative text" variant="outlined" />
+                <TextField label="Alternative text" value={mediaInfo.alt} onChange={handleInfoUpdate('alt')} variant="outlined" />
               </FormControl>
             </Box>
             <Box className={classes.formControlWrapper}>
               <FormControl fullWidth>
-                <TextField label="Caption" variant="outlined" />
-              </FormControl>
-            </Box>
-            <Box className={classes.formControlWrapper}>
-              <FormControl fullWidth>
-                <TextField label="Tags" variant="outlined" />
-              </FormControl>
-            </Box>
-            <Box className={classes.formControlWrapper}>
-              <FormControl fullWidth>
-                <TextField label="Name" value={item.name} disabled variant="outlined" />
+                <TextField label="Caption" value={mediaInfo.caption} onChange={handleInfoUpdate('caption')} variant="outlined" />
               </FormControl>
             </Box>
             <Box className={classes.formControlWrapper}>
@@ -193,6 +196,9 @@ const InfoBoxComponent = props => {
               <FormControl fullWidth>
                 <TextField label="Updated at" value={item.updated_at} disabled variant="outlined" />
               </FormControl>
+            </Box>
+            <Box className={classes.formControlWrapper}>
+              <Button onClick={() => console.log(mediaInfo)}>Salva</Button>
             </Box>
           </Box>
         </Box>

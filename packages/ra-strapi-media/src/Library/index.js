@@ -65,8 +65,7 @@ const LibraryComponent = props => {
   }
 
   if (search !== '') {
-    if (isNaN(search)) filter.name = search
-    else filter.name_contains = search
+    filter.q = search
   }
 
   if (Object.keys(filter).length) {
@@ -94,7 +93,6 @@ const LibraryComponent = props => {
       item={infoView}
       onClose={() => setInfoView(false)}
       onCrop={media => {
-        console.log('on crop', media)
         setInfoView(fixUploadUrl(media))
         setPagination({ ...pagination, rnd: Math.random() })
       }}
