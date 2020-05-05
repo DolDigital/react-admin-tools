@@ -7,9 +7,9 @@ import Image from 'react-graceful-image'
 import GridList from '@material-ui/core/GridList'
 import GridListTile from '@material-ui/core/GridListTile'
 import GridListTileBar from '@material-ui/core/GridListTileBar'
-import DescriptionIcon from '@material-ui/icons/Description'
 
 import fixUploadUrl from '../helpers/fixUploadUrl'
+import FileIcon from '../FileIcon'
 
 const UploadComponent = props => {
   const {
@@ -52,7 +52,7 @@ const UploadComponent = props => {
                 width="100%"
               />
                 :
-                <DescriptionIcon />
+                <FileIcon media={tile} />
               }
               <GridListTileBar
                 title={tile.name}

@@ -7,6 +7,7 @@ import GridListTile from '@material-ui/core/GridListTile'
 import GridListTileBar from '@material-ui/core/GridListTileBar'
 
 import fixUploadUrl from '../helpers/fixUploadUrl'
+import FileIcon from '../FileIcon'
 
 const MediaList = props => {
   const { media, ...otherProps } = props
@@ -27,7 +28,7 @@ const MediaList = props => {
                 width="100%"
               />
                 :
-                <DescriptionIcon />
+                <FileIcon media={_media} />
               }
               <GridListTileBar
                 title={_media.name}

@@ -7,7 +7,6 @@ import Box from '@material-ui/core/Box'
 import Checkbox from '@material-ui/core/Checkbox'
 import CircularProgress from '@material-ui/core/CircularProgress'
 // import DeleteForeverIcon from '@material-ui/icons/DeleteForever'
-import DescriptionIcon from '@material-ui/icons/Description'
 import GridList from '@material-ui/core/GridList'
 import GridListTile from '@material-ui/core/GridListTile'
 import GridListTileBar from '@material-ui/core/GridListTileBar'
@@ -18,6 +17,7 @@ import Typography from '@material-ui/core/Typography'
 
 import fixUploadUrl from '../helpers/fixUploadUrl'
 import InfoBoxComponent from './InfoBoxComponent'
+import FileIcon from '../FileIcon'
 
 const imageMimeTypes = [
   'image/bmp',
@@ -118,7 +118,7 @@ const LibraryComponent = props => {
                 width="100%"
               />
                 :
-                <DescriptionIcon />
+                <FileIcon media={tile} />
               }
               <GridListTileBar
                 title={<>
@@ -161,7 +161,7 @@ const LibraryComponent = props => {
               <GridListTile key={tile.id} cols={tile.cols || 1}>
                 {/image(.*)/.exec(tile.mime) ? <img src={tile.url} alt={tile.name} />
                   :
-                  <DescriptionIcon />
+                  <FileIcon media={tile} />
                 }
                 <GridListTileBar
                   title={<>
