@@ -1,6 +1,6 @@
 {
   "name": "@doldigital/ra-strapi-media",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "main": "lib/index.js",
   "author": "Luigi Pressello <l.pressello@dol.it>",
   "license": "MIT",
